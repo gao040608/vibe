@@ -9,7 +9,7 @@ build/
 
 # Environment
 .env
-.env.local
+.env.example
 .env.*.local
 
 # Logs
@@ -29,8 +29,7 @@ Thumbs.db
 *.swo
 
 # VibeCoding project specific
-project/tmp/
-*.tmp
+project/
 
 # Backend
 backend/node_modules/
