@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import ChatHistory from './components/ChatHistory'
 import ChatInput from './components/ChatInput'
 
@@ -8,18 +8,24 @@ export default function App() {
   const [messages, setMessages] = useState([])
   const [toolLogs, setToolLogs] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const abortControllerRef = useRef(null)
 
   const sendMessage = useCallback(async (userInput) => {
     const newMessages = [...messages, { role: 'user', content: userInput }]
     setMessages(newMessages)
-    setToolLogs([])   // 新对话，清空工具日志
+    setToolLogs([])
     setIsLoading(true)
+
+    // 创建 AbortController，用于取消请求
+    const controller = new AbortController()
+    abortControllerRef.current = controller
 
     try {
       const response = await fetch(API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ messages: newMessages })
+        body: JSON.stringify({ messages: newMessages }),
+        signal: controller.signal
       })
 
       if (!response.ok) {
@@ -29,7 +35,7 @@ export default function App() {
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let assistantContent = ''
-      let buffer = ''       // 拼接不完整行
+      let buffer = ''
       const logs = []
 
       setMessages([...newMessages, { role: 'assistant', content: '' }])
@@ -40,7 +46,6 @@ export default function App() {
 
         buffer += decoder.decode(value, { stream: true })
 
-        // 逐行处理完整行（以 \n 结尾）
         let cut
         while ((cut = buffer.indexOf('\n')) !== -1) {
           const line = buffer.substring(0, cut).trim()
@@ -56,7 +61,6 @@ export default function App() {
         }
       }
 
-      // 流结束后处理 buffer 剩余内容
       if (buffer.trim()) {
         const line = buffer.trim()
         if (line.startsWith('[TOOL]') || line.startsWith('[TOOL_RESULT]')) {
@@ -68,15 +72,27 @@ export default function App() {
         }
       }
     } catch (error) {
-      console.error('Error:', error)
-      setMessages(prev => [
-        ...prev.filter(m => !(m.role === 'assistant' && m.content === '')),
-        { role: 'assistant', content: '发生错误，请检查后端服务是否启动后重试。' }
-      ])
+      // 用户主动取消，不显示错误
+      if (error.name === 'AbortError') {
+        console.log('生成已停止')
+      } else {
+        console.error('Error:', error)
+        setMessages(prev => [
+          ...prev.filter(m => !(m.role === 'assistant' && m.content === '')),
+          { role: 'assistant', content: '发生错误，请检查后端服务是否启动后重试。' }
+        ])
+      }
     } finally {
       setIsLoading(false)
+      abortControllerRef.current = null
     }
   }, [messages])
+
+  const stopGeneration = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+    }
+  }, [])
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -87,7 +103,11 @@ export default function App() {
 
       <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} />
 
-      <ChatInput onSend={sendMessage} isLoading={isLoading} />
+      <ChatInput
+        onSend={sendMessage}
+        isLoading={isLoading}
+        onStop={stopGeneration}
+      />
     </div>
   )
 }

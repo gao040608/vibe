@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 
-export default function ChatInput({ onSend, isLoading }) {
+export default function ChatInput({ onSend, isLoading, onStop }) {
   const [input, setInput] = useState('')
   const textareaRef = useRef(null)
 
@@ -32,13 +32,25 @@ export default function ChatInput({ onSend, isLoading }) {
           rows={3}
           className="flex-1 resize-none border border-gray-300 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-50 disabled:text-gray-400"
         />
-        <button
-          onClick={handleSubmit}
-          disabled={!input.trim() || isLoading}
-          className="bg-blue-600 text-white px-5 py-3 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoading ? '生成中...' : '发送'}
-        </button>
+        {isLoading ? (
+          <button
+            onClick={onStop}
+            className="bg-red-500 text-white px-5 py-3 rounded-xl text-sm font-medium hover:bg-red-600 transition-colors flex items-center gap-1.5"
+          >
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <rect x="6" y="6" width="12" height="12" rx="2" />
+            </svg>
+            停止
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            disabled={!input.trim()}
+            className="bg-blue-600 text-white px-5 py-3 rounded-xl text-sm font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+          >
+            发送
+          </button>
+        )}
       </div>
     </div>
   )

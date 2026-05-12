@@ -206,7 +206,7 @@ app.post('/api/chat', async (req, res) => {
 
   try {
     let currentMessages = [...messages];
-    let maxIterations = 5; // 防止无限循环
+    let maxIterations = 50; // 防止无限循环
 
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
