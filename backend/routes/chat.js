@@ -1,5 +1,4 @@
 const { Router } = require('express');
-const { ENDING_PROMPT } = require('../config');
 const { callLLMNonStream, callLLMStream } = require('../llm/client');
 const { understandIntent } = require('../llm/intent');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
@@ -42,7 +41,7 @@ router.post('/chat', async (req, res) => {
       const toolCalls = parseToolCalls(llmResponse);
 
       if (toolCalls.length === 0) {
-        await callLLMStream(currentMessages, res, ENDING_PROMPT);
+        await callLLMStream(currentMessages, res);
         res.end();
         return;
       }

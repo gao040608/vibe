@@ -13,10 +13,6 @@ const BASE_SYSTEM_PROMPT = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'system_prompt.txt'),
   'utf-8'
 );
-const ENDING_PROMPT = fs.readFileSync(
-  path.join(__dirname, '..', 'prompts', 'ending_prompt.txt'),
-  'utf-8'
-);
 
 const SYSTEM_MESSAGE = {
   role: 'system',
@@ -28,6 +24,5 @@ module.exports = {
   ALIYUN_API_KEY,
   ALIYUN_MODEL,
   PORT,
-  ENDING_PROMPT,
   SYSTEM_MESSAGE
 };

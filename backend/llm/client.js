@@ -36,18 +36,10 @@ async function callLLMNonStream(messages) {
  * 调用阿里云 API（流式，用于最终响应）
  * @param {Array} messages
  * @param {Object} res - Express response 对象
- * @param {string} [extraSystemPrompt]
  * @returns {Promise<string>}
  */
-async function callLLMStream(messages, res, extraSystemPrompt) {
-  let systemMessage = SYSTEM_MESSAGE;
-  if (extraSystemPrompt) {
-    systemMessage = {
-      role: 'system',
-      content: `${SYSTEM_MESSAGE.content}\n\n${extraSystemPrompt}`
-    };
-  }
-  const apiMessages = [systemMessage, ...messages];
+async function callLLMStream(messages, res) {
+  const apiMessages = [SYSTEM_MESSAGE, ...messages];
 
   const apiResponse = await fetch(ALIYUN_API_BASE, {
     method: 'POST',
