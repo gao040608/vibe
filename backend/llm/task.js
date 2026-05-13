@@ -25,7 +25,7 @@ async function decomposeTask(userInput, res) {
         messages: [
           {
             role: 'system',
-            content: '你是一个任务分解助手。将用户的需求拆解为3-5个具体的执行步骤，每步不超过15个字。只输出一个 JSON 数组，格式为 ["步骤1", "步骤2", ...]，不要有任何其他内容。'
+            content: '你是一个任务分解助手。将用户的需求拆解为几个具体的执行步骤，每步不超过15个字。只输出一个 JSON 数组，格式为 ["步骤1", "步骤2", ...]，不要有任何其他内容。'
           },
           { role: 'user', content: userInput }
         ],
