@@ -8,12 +8,14 @@ export default function App() {
   const [messages, setMessages] = useState([])
   const [toolLogs, setToolLogs] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [intentInfo, setIntentInfo] = useState(null)
   const abortControllerRef = useRef(null)
 
   const sendMessage = useCallback(async (userInput) => {
     const newMessages = [...messages, { role: 'user', content: userInput }]
     setMessages(newMessages)
     setToolLogs([])
+    setIntentInfo(null)
     setIsLoading(true)
 
     // 创建 AbortController，用于取消请求
@@ -51,7 +53,14 @@ export default function App() {
           const line = buffer.substring(0, cut).trim()
           buffer = buffer.substring(cut + 1)
 
-          if (line.startsWith('[TOOL]') || line.startsWith('[TOOL_RESULT]')) {
+          if (line.startsWith('[INTENT]')) {
+            const text = line.slice('[INTENT]'.length).trim()
+            if (text === '正在理解意图') {
+              setIntentInfo({ loading: true, text: '' })
+            } else if (text.startsWith('意图：')) {
+              setIntentInfo({ loading: false, text: text.slice(3) })
+            }
+          } else if (line.startsWith('[TOOL]') || line.startsWith('[TOOL_RESULT]')) {
             logs.push(line)
             setToolLogs([...logs])
           } else if (line) {
@@ -101,7 +110,7 @@ export default function App() {
         <p className="text-sm text-gray-500">AI 代码生成助手</p>
       </header>
 
-      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} />
+      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} intentInfo={intentInfo} />
 
       <ChatInput
         onSend={sendMessage}

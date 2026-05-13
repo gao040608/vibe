@@ -175,6 +175,46 @@ async function executeToolCalls(toolCalls, res) {
 }
 
 /**
+ * 输入：用户原始输入
+ * 输出：向前端发送 [INTENT] chunk
+ */
+async function understandIntent(userInput, res) {
+  if (!res || res.writableEnded) return;
+  res.write('[INTENT] 正在理解意图\n');
+
+  try {
+    const response = await fetch(ALIYUN_API_BASE, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${ALIYUN_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: ALIYUN_MODEL,
+        messages: [
+          {
+            role: 'system',
+            content: '你是一个意图理解助手。请用一句话简洁地描述用户的意图，不超过20个字。只输出意图描述，不要有任何其他内容。'
+          },
+          { role: 'user', content: userInput }
+        ],
+        stream: false
+      })
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      const intent = data.choices?.[0]?.message?.content?.trim() || '未知意图';
+      if (!res.writableEnded) {
+        res.write(`[INTENT] 意图：${intent}\n`);
+      }
+    }
+  } catch (e) {
+    console.error('[INTENT] 意图理解失败:', e.message);
+  }
+}
+
+/**
  * 格式化工具结果为文本
  */
 function formatToolResults(results) {
@@ -211,6 +251,15 @@ app.post('/api/chat', async (req, res) => {
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+
+    // 立即发送响应头，让浏览器知道流式响应已开始
+    res.flushHeaders();
+    // 禁用 Nagle 算法，确保每次 res.write() 立即发出，不被 TCP 缓冲合并
+    if (res.socket) res.socket.setNoDelay(true);
+
+    // 意图理解（独立模块，仅输出到前端，不参与后续流程）
+    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    await understandIntent(lastUserMessage?.content || '', res);
 
     for (let i = 0; i < maxIterations; i++) {
       // 调用 LLM（非流式，便于解析工具调用）

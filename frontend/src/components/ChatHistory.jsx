@@ -27,12 +27,12 @@ function ToolLog({ text }) {
   )
 }
 
-export default function ChatHistory({ messages, toolLogs, isLoading }) {
+export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, toolLogs])
+  }, [messages, toolLogs, intentInfo])
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
@@ -47,6 +47,28 @@ export default function ChatHistory({ messages, toolLogs, isLoading }) {
         {messages.map((msg, idx) => (
           <ChatMessage key={idx} message={msg} />
         ))}
+
+        {/* 意图理解状态 */}
+        {intentInfo && (
+          <div className="flex justify-start">
+            <div className="bg-purple-50 border border-purple-100 rounded-2xl rounded-bl-md px-4 py-2 text-xs text-purple-600 font-mono space-y-0.5">
+              {intentInfo.loading && !intentInfo.text ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                  正在理解意图...
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5 text-purple-400">
+                    <span>✦</span>
+                    <span>意图理解</span>
+                  </div>
+                  <div className="text-purple-700 font-medium">意图：{intentInfo.text}</div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 工具执行日志 */}
         {toolLogs.length > 0 && (
