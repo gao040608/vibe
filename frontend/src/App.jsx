@@ -57,6 +57,8 @@ export default function App() {
           let chunk
           try { chunk = JSON.parse(line) } catch { continue }
 
+          console.log('[chunk]', chunk)
+
           if (chunk.type === 'intent') {
             if (chunk.status === 'thinking') {
               setIntentInfo({ loading: true, text: '' })
