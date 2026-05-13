@@ -35,12 +35,12 @@ function ToolLog({ log }) {
   )
 }
 
-export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo }) {
+export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo, taskInfo }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, toolLogs, intentInfo])
+  }, [messages, toolLogs, intentInfo, taskInfo])
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
@@ -72,6 +72,35 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo 
                     <span>意图理解</span>
                   </div>
                   <div className="text-purple-700 font-medium">意图：{intentInfo.text}</div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 任务分解状态 */}
+        {taskInfo && (
+          <div className="flex justify-start">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl rounded-bl-md px-4 py-2 text-xs text-blue-600 font-mono space-y-1">
+              {taskInfo.loading && taskInfo.steps.length === 0 ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  正在分解任务...
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5 text-blue-400">
+                    <span>☰</span>
+                    <span>任务分解</span>
+                  </div>
+                  <div className="text-blue-700 space-y-0.5 mt-1">
+                    {taskInfo.steps.map((step, i) => (
+                      <div key={i} className="flex items-start gap-1.5">
+                        <span className="text-blue-400 mt-0.5">{i + 1}.</span>
+                        <span>{step}</span>
+                      </div>
+                    ))}
+                  </div>
                 </>
               )}
             </div>

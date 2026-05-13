@@ -9,6 +9,7 @@ export default function App() {
   const [toolLogs, setToolLogs] = useState([])
   const [isLoading, setIsLoading] = useState(false)
   const [intentInfo, setIntentInfo] = useState(null)
+  const [taskInfo, setTaskInfo] = useState(null)
   const abortControllerRef = useRef(null)
 
   const sendMessage = useCallback(async (userInput) => {
@@ -16,6 +17,7 @@ export default function App() {
     setMessages(newMessages)
     setToolLogs([])
     setIntentInfo(null)
+    setTaskInfo(null)
     setIsLoading(true)
 
     // 创建 AbortController，用于取消请求
@@ -65,6 +67,12 @@ export default function App() {
             } else if (chunk.status === 'done') {
               setIntentInfo({ loading: false, text: chunk.text })
             }
+          } else if (chunk.type === 'task') {
+            if (chunk.status === 'thinking') {
+              setTaskInfo({ loading: true, steps: [] })
+            } else if (chunk.status === 'done') {
+              setTaskInfo({ loading: false, steps: chunk.steps || [] })
+            }
           } else if (chunk.type === 'tool') {
             const updated = [...logs]
             if (chunk.status === 'start') {
@@ -113,7 +121,7 @@ export default function App() {
         <p className="text-sm text-gray-500">AI 代码生成助手</p>
       </header>
 
-      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} intentInfo={intentInfo} />
+      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} intentInfo={intentInfo} taskInfo={taskInfo} />
 
       <ChatInput
         onSend={sendMessage}

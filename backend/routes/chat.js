@@ -1,6 +1,7 @@
 const { Router } = require('express');
 const { callLLMNonStream, callLLMStream } = require('../llm/client');
 const { understandIntent } = require('../llm/intent');
+const { decomposeTask } = require('../llm/task');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 
 const router = Router();
@@ -35,6 +36,9 @@ router.post('/chat', async (req, res) => {
     // 意图理解（独立模块，仅输出到前端，不参与后续流程）
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     await understandIntent(lastUserMessage?.content || '', res);
+
+    // 任务分解（独立模块，仅输出到前端，不参与后续流程）
+    await decomposeTask(lastUserMessage?.content || '', res);
 
     for (let i = 0; i < maxIterations; i++) {
       const llmResponse = await callLLMNonStream(currentMessages);
