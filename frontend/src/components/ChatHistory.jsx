@@ -107,12 +107,38 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo,
           </div>
         )}
 
-        {/* 工具执行日志 */}
+
+        {/* 工具执行日志（卡片风格） */}
         {toolLogs.length > 0 && (
-          <div className="flex flex-col gap-1 ml-2">
-            {toolLogs.map((log, i) => (
-              <ToolLog key={i} log={log} />
-            ))}
+          <div className="flex justify-start">
+            <div className="bg-yellow-50 border border-yellow-100 rounded-2xl rounded-bl-md px-4 py-2 text-xs text-yellow-700 font-mono space-y-1 min-w-[220px]">
+              <div className="flex items-center gap-1.5 text-yellow-500">
+                <span>🛠️</span>
+                <span>工具调用</span>
+              </div>
+              <div className="text-yellow-800 space-y-0.5 mt-1">
+                {toolLogs.map((log, i) => {
+                  const label = ACTION_LABEL[log.action] || log.action;
+                  const display = log.path ? `${label}：${log.path}` : label;
+                  if (log.status === 'start') {
+                    return (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <span className="inline-block w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+                        <span>{display}</span>
+                        <span className="text-yellow-400 ml-1">进行中</span>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div key={i} className={`flex items-center gap-1.5 ${log.ok ? 'text-green-700' : 'text-red-700'}`}>
+                      <span>{log.ok ? '✓' : '✗'}</span>
+                      <span>{display}</span>
+                      <span className={log.ok ? 'text-green-400 ml-1' : 'text-red-400 ml-1'}>{log.ok ? '成功' : '失败'}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         )}
 
