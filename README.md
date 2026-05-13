@@ -45,4 +45,4 @@ npm run dev
 
 - **后端**: FastAPI + Python
 - **前端**: React + Vite + Tailwind CSS
-- **AI模型**: 阿里云通义千问 (qwen-plus)r
+- **AI模型**: 阿里云通义千问 (qwen3.6-plus)
