@@ -1,4 +1,5 @@
 const { executeTool, parseToolCalls } = require('../../tools');
+const { writeChunk } = require('../utils/stream');
 
 const ACTION_MAP = {
   'read_file': '读取文件',
@@ -22,18 +23,13 @@ async function executeToolCalls(toolCalls, res) {
     const filePath = call.arguments.file_path || '';
     const toolMsg = `${action}：${filePath}`;
 
-    if (res && !res.writableEnded) {
-      res.write(`\n[TOOL] ${toolMsg}\n`);
-    }
+    writeChunk(res, { type: 'tool', status: 'start', action, path: filePath });
     console.log(`[TOOL] ${toolMsg}`);
 
     const result = await executeTool(call.name, call.arguments);
     results.push({ name: call.name, arguments: call.arguments, result });
 
-    if (res && !res.writableEnded) {
-      const status = result.success ? '✓' : '✗';
-      res.write(`[TOOL_RESULT] ${status} ${toolMsg}\n`);
-    }
+    writeChunk(res, { type: 'tool', status: 'done', action, path: filePath, ok: result.success });
   }
 
   return results;

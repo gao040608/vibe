@@ -52,32 +52,33 @@ export default function App() {
         while ((cut = buffer.indexOf('\n')) !== -1) {
           const line = buffer.substring(0, cut).trim()
           buffer = buffer.substring(cut + 1)
+          if (!line) continue
 
-          if (line.startsWith('[INTENT]')) {
-            const text = line.slice('[INTENT]'.length).trim()
-            if (text === '正在理解意图') {
+          let chunk
+          try { chunk = JSON.parse(line) } catch { continue }
+
+          if (chunk.type === 'intent') {
+            if (chunk.status === 'thinking') {
               setIntentInfo({ loading: true, text: '' })
-            } else if (text.startsWith('意图：')) {
-              setIntentInfo({ loading: false, text: text.slice(3) })
+            } else if (chunk.status === 'done') {
+              setIntentInfo({ loading: false, text: chunk.text })
             }
-          } else if (line.startsWith('[TOOL]') || line.startsWith('[TOOL_RESULT]')) {
-            logs.push(line)
+          } else if (chunk.type === 'tool') {
+            const updated = [...logs]
+            if (chunk.status === 'start') {
+              updated.push({ status: 'start', action: chunk.action, path: chunk.path })
+            } else if (chunk.status === 'done') {
+              // 更新对应的 start 条目为 done
+              const idx = updated.findLastIndex(l => l.status === 'start' && l.action === chunk.action && l.path === chunk.path)
+              if (idx !== -1) updated[idx] = { status: 'done', action: chunk.action, path: chunk.path, ok: chunk.ok }
+              else updated.push({ status: 'done', action: chunk.action, path: chunk.path, ok: chunk.ok })
+            }
+            logs.length = 0; logs.push(...updated)
             setToolLogs([...logs])
-          } else if (line) {
-            assistantContent += line + '\n'
+          } else if (chunk.type === 'content') {
+            assistantContent += chunk.text
             setMessages([...newMessages, { role: 'assistant', content: assistantContent }])
           }
-        }
-      }
-
-      if (buffer.trim()) {
-        const line = buffer.trim()
-        if (line.startsWith('[TOOL]') || line.startsWith('[TOOL_RESULT]')) {
-          logs.push(line)
-          setToolLogs([...logs])
-        } else {
-          assistantContent += line
-          setMessages([...newMessages, { role: 'assistant', content: assistantContent }])
         }
       }
     } catch (error) {

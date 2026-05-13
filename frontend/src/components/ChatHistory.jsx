@@ -1,28 +1,36 @@
 import { useEffect, useRef } from 'react'
 import ChatMessage from './ChatMessage'
 
+const ACTION_LABEL = {
+  read_file: '读取文件',
+  create_file: '创建文件',
+  edit_file: '编辑文件',
+  delete_file: '删除文件',
+  list_directory: '列出目录',
+}
+
 /**
- * 渲染单条工具日志
- * [TOOL] 读取文件：src/App.jsx   → 灰色进行中
- * [TOOL_RESULT] ✓ 读取文件：...  → 绿色成功 / 红色失败
+ * 渲染单条工具日志（结构化对象）
+ * { status: 'start', action, path }  → 灰色进行中
+ * { status: 'done', action, path, ok } → 绿色成功 / 红色失败
  */
-function ToolLog({ text }) {
-  const isResult = text.startsWith('[TOOL_RESULT]')
-  const isOk = isResult && text.includes('✓')
-  const label = text
-    .replace('[TOOL]', '⚙️')
-    .replace('[TOOL_RESULT]', '')
-    .trim()
+function ToolLog({ log }) {
+  const label = ACTION_LABEL[log.action] || log.action
+  const display = log.path ? `${label}：${log.path}` : label
+
+  if (log.status === 'start') {
+    return (
+      <div className="text-xs font-mono px-2 py-0.5 rounded bg-gray-100 text-gray-500">
+        ⚙️ {display}
+      </div>
+    )
+  }
 
   return (
     <div className={`text-xs font-mono px-2 py-0.5 rounded ${
-      isResult
-        ? isOk
-          ? 'bg-green-50 text-green-700'
-          : 'bg-red-50 text-red-700'
-        : 'bg-gray-100 text-gray-500'
+      log.ok ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
     }`}>
-      {label}
+      {log.ok ? '✓' : '✗'} {display}
     </div>
   )
 }
@@ -74,7 +82,7 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo 
         {toolLogs.length > 0 && (
           <div className="flex flex-col gap-1 ml-2">
             {toolLogs.map((log, i) => (
-              <ToolLog key={i} text={log} />
+              <ToolLog key={i} log={log} />
             ))}
           </div>
         )}

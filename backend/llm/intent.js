@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL } = require('../config');
+const { writeChunk } = require('../utils/stream');
 
 /**
  * 意图理解模块（独立，不与其他模块耦合）
@@ -10,7 +11,7 @@ const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL } = require('../config');
  */
 async function understandIntent(userInput, res) {
   if (!res || res.writableEnded) return;
-  res.write('[INTENT] 正在理解意图\n');
+  writeChunk(res, { type: 'intent', status: 'thinking' });
 
   try {
     const response = await fetch(ALIYUN_API_BASE, {
@@ -35,9 +36,7 @@ async function understandIntent(userInput, res) {
     if (response.ok) {
       const data = await response.json();
       const intent = data.choices?.[0]?.message?.content?.trim() || '未知意图';
-      if (!res.writableEnded) {
-        res.write(`[INTENT] 意图：${intent}\n`);
-      }
+      writeChunk(res, { type: 'intent', status: 'done', text: intent });
     }
   } catch (e) {
     console.error('[INTENT] 意图理解失败:', e.message);

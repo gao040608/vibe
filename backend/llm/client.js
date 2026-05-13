@@ -1,5 +1,6 @@
 const fetch = require('node-fetch');
 const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL, SYSTEM_MESSAGE } = require('../config');
+const { writeChunk } = require('../utils/stream');
 
 /**
  * 调用阿里云 API（非流式，用于工具调用场景）
@@ -87,7 +88,7 @@ async function callLLMStream(messages, res, extraSystemPrompt) {
           const content = parsed.choices?.[0]?.delta?.content;
           if (content) {
             fullContent += content;
-            res.write(content);
+            writeChunk(res, { type: 'content', text: content });
           }
         } catch (e) {
           // skip malformed SSE lines
