@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL } = require('../config');
+const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
 const { writeChunk } = require('../utils/stream');
 
 const INTENT_SYSTEM = fs.readFileSync(
@@ -28,7 +28,7 @@ async function understandIntent(userInput, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: ALIYUN_MODEL,
+        model: getModel('qwen-flash'),
         messages: [
           {
             role: 'system',

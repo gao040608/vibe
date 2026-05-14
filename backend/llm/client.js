@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL, SYSTEM_MESSAGE } = require('../config');
+const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel, SYSTEM_MESSAGE } = require('../config');
 const { writeChunk } = require('../utils/stream');
 
 /**
@@ -17,7 +17,7 @@ async function callLLMNonStream(messages) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: ALIYUN_MODEL,
+      model: getModel('qwen3.6-plus'),
       messages: apiMessages,
       stream: false
     })
@@ -48,7 +48,7 @@ async function callLLMStream(messages, res) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: ALIYUN_MODEL,
+      model: getModel('qwen3.6-plus'),
       messages: apiMessages,
       stream: true
     })

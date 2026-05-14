@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL } = require('../config');
+const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
 const { writeChunk } = require('../utils/stream');
 
 const ORCHESTRATOR_SYSTEM = fs.readFileSync(
@@ -26,7 +26,7 @@ async function orchestrate(userInput, res) {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        model: ALIYUN_MODEL,
+        model: getModel('qwen3.6-plus'),
         messages: [
           { role: 'system', content: ORCHESTRATOR_SYSTEM },
           { role: 'user', content: userInput }
