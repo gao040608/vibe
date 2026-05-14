@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
+const { getModel } = require('../config');
+const { callLLMNonStream } = require('./client');
 const { writeChunk } = require('../utils/stream');
 
 const INTENT_SYSTEM = fs.readFileSync(
@@ -21,30 +21,11 @@ async function understandIntent(userInput, res) {
   writeChunk(res, { type: 'intent', status: 'thinking' });
 
   try {
-    const response = await fetch(ALIYUN_API_BASE, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ALIYUN_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: getModel('qwen-flash'),
-        messages: [
-          {
-            role: 'system',
-            content: INTENT_SYSTEM
-          },
-          { role: 'user', content: userInput }
-        ],
-        stream: false
-      })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const intent = data.choices?.[0]?.message?.content?.trim() || '未知意图';
-      writeChunk(res, { type: 'intent', status: 'done', text: intent });
-    }
+    const intent = await callLLMNonStream(
+      [{ role: 'system', content: INTENT_SYSTEM }, { role: 'user', content: userInput }],
+      { model: getModel('qwen-flash') }
+    );
+    writeChunk(res, { type: 'intent', status: 'done', text: intent.trim() || '未知意图' });
   } catch (e) {
     console.error('[INTENT] 意图理解失败:', e.message);
   }

@@ -5,9 +5,11 @@ const { writeChunk } = require('../utils/stream');
 /**
  * 调用阿里云 API（非流式，用于工具调用场景）
  * @param {Array} messages
+ * @param {Object} [options]
+ * @param {string} [options.model] - 指定模型，默认 qwen3.6-plus
  * @returns {Promise<string>}
  */
-async function callLLMNonStream(messages) {
+async function callLLMNonStream(messages, { model } = {}) {
   const apiMessages = [SYSTEM_MESSAGE, ...messages];
 
   const response = await fetch(ALIYUN_API_BASE, {
@@ -17,7 +19,7 @@ async function callLLMNonStream(messages) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: getModel('qwen3.6-plus'),
+      model: model || getModel('qwen3.6-plus'),
       messages: apiMessages,
       stream: false
     })
@@ -36,9 +38,11 @@ async function callLLMNonStream(messages) {
  * 调用阿里云 API（流式，用于最终响应）
  * @param {Array} messages
  * @param {Object} res - Express response 对象
+ * @param {Object} [options]
+ * @param {string} [options.model] - 指定模型，默认 qwen3.6-plus
  * @returns {Promise<string>}
  */
-async function callLLMStream(messages, res) {
+async function callLLMStream(messages, res, { model } = {}) {
   const apiMessages = [SYSTEM_MESSAGE, ...messages];
 
   const apiResponse = await fetch(ALIYUN_API_BASE, {
@@ -48,7 +52,7 @@ async function callLLMStream(messages, res) {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      model: getModel('qwen3.6-plus'),
+      model: model || getModel('qwen3.6-plus'),
       messages: apiMessages,
       stream: true
     })

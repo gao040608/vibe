@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
+const { getModel } = require('../config');
+const { callLLMNonStream } = require('./client');
 const { writeChunk } = require('../utils/stream');
 
 const TASK_SYSTEM = fs.readFileSync(
@@ -21,38 +21,19 @@ async function decomposeTask(userInput, res) {
   writeChunk(res, { type: 'task', status: 'thinking' });
 
   try {
-    const response = await fetch(ALIYUN_API_BASE, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ALIYUN_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: getModel('qwen-flash'),
-        messages: [
-          {
-            role: 'system',
-            content: TASK_SYSTEM
-          },
-          { role: 'user', content: userInput }
-        ],
-        stream: false
-      })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      const raw = data.choices?.[0]?.message?.content?.trim() || '[]';
-      let steps;
-      try {
-        steps = JSON.parse(raw);
-        if (!Array.isArray(steps)) steps = [raw];
-      } catch {
-        steps = [raw];
-      }
-      console.log('[TASK] 任务分解：', steps);
-      writeChunk(res, { type: 'task', status: 'done', steps });
+    const raw = await callLLMNonStream(
+      [{ role: 'system', content: TASK_SYSTEM }, { role: 'user', content: userInput }],
+      { model: getModel('qwen-flash') }
+    );
+    let steps;
+    try {
+      steps = JSON.parse(raw.trim());
+      if (!Array.isArray(steps)) steps = [raw.trim()];
+    } catch {
+      steps = [raw.trim()];
     }
+    console.log('[TASK] 任务分解：', steps);
+    writeChunk(res, { type: 'task', status: 'done', steps });
   } catch (e) {
     console.error('[TASK] 任务分解失败:', e.message);
   }
