@@ -31,12 +31,10 @@ router.post('/chat', async (req, res) => {
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     const userInput = lastUserMessage?.content || '';
 
-    // 意图理解、任务分解、编排规划 并行执行（均为独立 LLM 调用）
-    const [plan] = await Promise.all([
-      orchestrate(userInput, res),
-      understandIntent(userInput, res),
-      decomposeTask(userInput, res)
-    ]);
+    // 意图理解 → 任务分解 → 编排规划 串行执行，依次展示
+    await understandIntent(userInput, res);
+    await decomposeTask(userInput, res);
+    const plan = await orchestrate(userInput, res);
 
     // 共享上下文，在各 Agent 间传递对话历史
     const context = {
