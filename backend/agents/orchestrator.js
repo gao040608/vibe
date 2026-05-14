@@ -51,10 +51,10 @@ async function orchestrate(userInput, res) {
         plan.length === 0 ||
         !plan.every(phase => Array.isArray(phase) && phase.every(id => typeof id === 'number'))
       ) {
-        plan = [[1]];
+        plan = [[3]];
       }
     } catch {
-      plan = [[1]];
+      plan = [[3]];
     }
 
     console.log('[ORCHESTRATOR] 执行计划:', JSON.stringify(plan));
@@ -62,9 +62,9 @@ async function orchestrate(userInput, res) {
     return plan;
   } catch (e) {
     console.error('[ORCHESTRATOR] 规划失败:', e.message);
-    // 降级：默认只执行代码生成
-    writeChunk(res, { type: 'plan', status: 'done', plan: [[1]] });
-    return [[1]];
+    // 降级：默认只执行闲聊对话
+    writeChunk(res, { type: 'plan', status: 'done', plan: [[3]] });
+    return [[3]];
   }
 }
 

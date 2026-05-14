@@ -1,14 +1,17 @@
 const { codeGenAgent } = require('./codeGenAgent');
 const { lintAgent } = require('./lintAgent');
+const { chatAgent } = require('./chatAgent');
 
 /**
  * Agent ID → 实现函数映射
  * 1: 代码生成 Agent
  * 2: 代码检查 Agent
+ * 3: 闲聊对话 Agent
  */
 const AGENT_MAP = {
   1: codeGenAgent,
-  2: lintAgent
+  2: lintAgent,
+  3: chatAgent
 };
 
 /**
