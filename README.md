@@ -4,18 +4,6 @@
 cd "C:\Users\Administrator\Desktop\vibe"
 ## 项目结构
 
-```
-vibe/
-├── backend/          # FastAPI 后端
-│   ├── main.py      # 主应用文件
-│   ├── .env         # 环境变量配置
-│   └── requirements.txt
-└── frontend/         # React 前端
-    ├── src/
-    │   ├── App.jsx  # 主聊天组件
-    │   └── index.css
-    └── package.json
-```
 
 ## 快速开始
 

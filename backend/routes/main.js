@@ -1,6 +1,5 @@
 const { Router } = require('express');
 const { understandIntent } = require('../llm/intent');
-const { decomposeTask } = require('../llm/task');
 const { orchestrate } = require('../agents/orchestrator');
 const { runPlan } = require('../agents/runner');
 
@@ -31,9 +30,8 @@ router.post('/chat', async (req, res) => {
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
     const userInput = lastUserMessage?.content || '';
 
-    // 意图理解 → 任务分解 → 编排规划 串行执行，依次展示
+    // 意图理解 → 编排规划 串行执行，依次展示
     await understandIntent(userInput, res);
-    await decomposeTask(userInput, res);
     const plan = await orchestrate(userInput, res);
 
     // 共享上下文，在各 Agent 间传递对话历史
