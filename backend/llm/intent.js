@@ -1,6 +1,13 @@
+const fs = require('fs');
+const path = require('path');
 const fetch = require('node-fetch');
 const { ALIYUN_API_BASE, ALIYUN_API_KEY, ALIYUN_MODEL } = require('../config');
 const { writeChunk } = require('../utils/stream');
+
+const INTENT_SYSTEM = fs.readFileSync(
+  path.join(__dirname, '..', 'prompts', 'intent.txt'),
+  'utf-8'
+);
 
 /**
  * 意图理解模块（独立，不与其他模块耦合）
@@ -25,7 +32,7 @@ async function understandIntent(userInput, res) {
         messages: [
           {
             role: 'system',
-            content: '你是一个意图理解助手。请用一句话简洁地描述用户的意图，不超过20个字。只输出意图描述，不要有任何其他内容。'
+            content: INTENT_SYSTEM
           },
           { role: 'user', content: userInput }
         ],

@@ -10,7 +10,7 @@ const ALIYUN_MODEL = process.env.ALIYUN_MODEL;
 const PORT = process.env.PORT || 3000;
 
 const BASE_SYSTEM_PROMPT = fs.readFileSync(
-  path.join(__dirname, '..', 'prompts', 'system_prompt.txt'),
+  path.join(__dirname, 'prompts', 'system_prompt.txt'),
   'utf-8'
 );
 
