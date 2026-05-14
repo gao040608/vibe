@@ -1,12 +1,19 @@
 const fs = require('fs');
 const path = require('path');
+const { BASE_SYSTEM_PROMPT } = require('../config');
 const { callLLMNonStream, callLLMStream } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
+const { generateToolInstructions } = require('../../tools');
 
 const CODEGEN_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'codeGen.txt'),
   'utf-8'
 );
+
+const SYSTEM_MESSAGE = {
+  role: 'system',
+  content: `${BASE_SYSTEM_PROMPT}\n\n${CODEGEN_SYSTEM}\n\n# 可用工具\n${generateToolInstructions()}`
+};
 
 const MAX_ITERATIONS = 50;
 
@@ -20,12 +27,11 @@ async function codeGenAgent(context) {
   let currentMessages = [...context.messages];
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const llmResponse = await callLLMNonStream(currentMessages);
+    const llmResponse = await callLLMNonStream(currentMessages, { systemMessage: SYSTEM_MESSAGE });
     const toolCalls = parseToolCalls(llmResponse);
 
     if (toolCalls.length === 0) {
-      // 没有工具调用，流式输出最终回复
-      await callLLMStream(currentMessages, res);
+      await callLLMStream(currentMessages, res, { systemMessage: SYSTEM_MESSAGE });
       // 将最终状态同步回共享 context，供后续 Agent 使用
       context.messages = currentMessages;
       return;

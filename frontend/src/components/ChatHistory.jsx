@@ -79,35 +79,6 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo,
           </div>
         )}
 
-        {/* 任务分解状态 */}
-        {taskInfo && (
-          <div className="flex justify-start">
-            <div className="bg-blue-50 border border-blue-100 rounded-2xl rounded-bl-md px-4 py-2 text-xs text-blue-600 font-mono space-y-1">
-              {taskInfo.loading && taskInfo.steps.length === 0 ? (
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
-                  正在分解任务...
-                </div>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1.5 text-blue-400">
-                    <span>☰</span>
-                    <span>任务分解</span>
-                  </div>
-                  <div className="text-blue-700 space-y-0.5 mt-1">
-                    {taskInfo.steps.map((step, i) => (
-                      <div key={i} className="flex items-start gap-1.5">
-                        <span className="text-blue-400 mt-0.5">{i + 1}.</span>
-                        <span>{step}</span>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-        )}
-
         {/* 执行计划（Orchestrator 输出） */}
         {planInfo && (
           <div className="flex justify-start">
@@ -137,6 +108,35 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo,
           </div>
         )}
 
+        {/* 任务分解状态 */}
+        {taskInfo && (
+          <div className="flex justify-start">
+            <div className="bg-blue-50 border border-blue-100 rounded-2xl rounded-bl-md px-4 py-2 text-xs text-blue-600 font-mono space-y-1">
+              {taskInfo.loading && taskInfo.steps.length === 0 ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+                  正在分解任务...
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5 text-blue-400">
+                    <span>☰</span>
+                    <span>任务分解</span>
+                  </div>
+                  <div className="text-blue-700 space-y-0.5 mt-1">
+                    {taskInfo.steps.map((step, i) => (
+                      <div key={i} className="flex items-start gap-1.5">
+                        <span className="text-blue-400 mt-0.5">{i + 1}.</span>
+                        <span>{step}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+        
         {/* 工具执行日志（卡片风格） */}
         {toolLogs.length > 0 && (
           <div className="flex justify-start">

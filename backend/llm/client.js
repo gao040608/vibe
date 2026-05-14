@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel, SYSTEM_MESSAGE } = require('../config');
+const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
 const { writeChunk } = require('../utils/stream');
 
 /**
@@ -9,8 +9,8 @@ const { writeChunk } = require('../utils/stream');
  * @param {string} [options.model] - 指定模型，默认 qwen3.6-plus
  * @returns {Promise<string>}
  */
-async function callLLMNonStream(messages, { model } = {}) {
-  const apiMessages = [SYSTEM_MESSAGE, ...messages];
+async function callLLMNonStream(messages, { model, systemMessage } = {}) {
+  const apiMessages = systemMessage ? [systemMessage, ...messages] : messages;
 
   const response = await fetch(ALIYUN_API_BASE, {
     method: 'POST',
@@ -42,8 +42,8 @@ async function callLLMNonStream(messages, { model } = {}) {
  * @param {string} [options.model] - 指定模型，默认 qwen3.6-plus
  * @returns {Promise<string>}
  */
-async function callLLMStream(messages, res, { model } = {}) {
-  const apiMessages = [SYSTEM_MESSAGE, ...messages];
+async function callLLMStream(messages, res, { model, systemMessage } = {}) {
+  const apiMessages = systemMessage ? [systemMessage, ...messages] : messages;
 
   const apiResponse = await fetch(ALIYUN_API_BASE, {
     method: 'POST',
