@@ -35,12 +35,12 @@ function ToolLog({ log }) {
   )
 }
 
-export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo, taskInfo }) {
+export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo, taskInfo, planInfo, lintInfo }) {
   const bottomRef = useRef(null)
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, toolLogs, intentInfo, taskInfo])
+  }, [messages, toolLogs, intentInfo, taskInfo, planInfo, lintInfo])
 
   return (
     <div className="flex-1 overflow-y-auto px-4 py-6">
@@ -55,6 +55,7 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo,
         {messages.map((msg, idx) => (
           <ChatMessage key={idx} message={msg} />
         ))}
+
 
         {/* 意图理解状态 */}
         {intentInfo && (
@@ -107,6 +108,34 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo,
           </div>
         )}
 
+        {/* 执行计划（Orchestrator 输出） */}
+        {planInfo && (
+          <div className="flex justify-start">
+            <div className="bg-indigo-50 border border-indigo-100 rounded-2xl rounded-bl-md px-4 py-2 text-xs text-indigo-600 font-mono space-y-1">
+              {planInfo.loading && !planInfo.plan ? (
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                  正在规划执行计划...
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1.5 text-indigo-400">
+                    <span>⬡</span>
+                    <span>执行计划</span>
+                  </div>
+                  <div className="text-indigo-700 space-y-0.5 mt-1">
+                    {planInfo.plan?.map((phase, i) => (
+                      <div key={i} className="flex items-center gap-1.5">
+                        <span className="text-indigo-400">阶段{i + 1}:</span>
+                        <span>{phase.map(id => id === 1 ? '代码生成' : id === 2 ? '代码检查' : `Agent${id}`).join(' + ')}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 工具执行日志（卡片风格） */}
         {toolLogs.length > 0 && (
@@ -138,6 +167,54 @@ export default function ChatHistory({ messages, toolLogs, isLoading, intentInfo,
                   );
                 })}
               </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* Lint 检查结果 */}
+        {lintInfo && (
+          <div className="flex justify-start">
+            <div className={`border rounded-2xl rounded-bl-md px-4 py-2 text-xs font-mono space-y-1 min-w-[220px] ${
+              lintInfo.loading
+                ? 'bg-orange-50 border-orange-100 text-orange-600'
+                : lintInfo.error
+                  ? 'bg-red-50 border-red-100 text-red-600'
+                  : lintInfo.errorCount > 0
+                    ? 'bg-red-50 border-red-100 text-red-700'
+                    : 'bg-green-50 border-green-100 text-green-700'
+            }`}>
+              <div className="flex items-center gap-1.5 opacity-70">
+                <span>🔍</span>
+                <span>代码检查</span>
+              </div>
+              {lintInfo.loading ? (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-orange-400 animate-pulse" />
+                  正在运行 ESLint...
+                </div>
+              ) : lintInfo.error ? (
+                <div className="mt-1 text-red-600">{lintInfo.error}</div>
+              ) : (
+                <div className="mt-1 space-y-1">
+                  <div className={lintInfo.errorCount > 0 ? 'text-red-600 font-medium' : 'text-green-600 font-medium'}>
+                    {lintInfo.errorCount === 0 && lintInfo.warningCount === 0
+                      ? '✓ 未发现问题'
+                      : `${lintInfo.errorCount} 个错误，${lintInfo.warningCount} 个警告`}
+                  </div>
+                  {lintInfo.results?.map((r, i) => (
+                    <div key={i} className="space-y-0.5">
+                      <div className="text-gray-500 font-medium">{r.file}</div>
+                      {r.errors.map((e, j) => (
+                        <div key={j} className={`pl-2 ${e.severity === 'error' ? 'text-red-600' : 'text-yellow-600'}`}>
+                          {e.severity === 'error' ? '✗' : '⚠'} 第{e.line}行: {e.message}
+                          {e.rule && <span className="opacity-50 ml-1">({e.rule})</span>}
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

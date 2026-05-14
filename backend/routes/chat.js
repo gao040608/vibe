@@ -1,8 +1,8 @@
 const { Router } = require('express');
-const { callLLMNonStream, callLLMStream } = require('../llm/client');
 const { understandIntent } = require('../llm/intent');
 const { decomposeTask } = require('../llm/task');
-const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
+const { orchestrate } = require('../agents/orchestrator');
+const { runPlan } = require('../agents/runner');
 
 const router = Router();
 
@@ -11,7 +11,8 @@ router.get('/health', (req, res) => {
 });
 
 /**
- * 主聊天接口（支持工具调用循环）
+ * 主聊天接口（多 Agent 编排）
+ * 流程：意图理解 + 任务分解 + 编排规划（并行） → 按计划执行 Agent
  */
 router.post('/chat', async (req, res) => {
   const { messages } = req.body;
@@ -21,48 +22,31 @@ router.post('/chat', async (req, res) => {
   }
 
   try {
-    let currentMessages = [...messages];
-    const maxIterations = 50;
-
     res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-
-    // 立即发送响应头，让浏览器知道流式响应已开始
     res.flushHeaders();
-    // 禁用 Nagle 算法，确保每次 res.write() 立即发出
     if (res.socket) res.socket.setNoDelay(true);
 
-    // 意图理解（独立模块，仅输出到前端，不参与后续流程）
     const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
-    await understandIntent(lastUserMessage?.content || '', res);
+    const userInput = lastUserMessage?.content || '';
 
-    // 任务分解（独立模块，仅输出到前端，不参与后续流程）
-    await decomposeTask(lastUserMessage?.content || '', res);
+    // 意图理解、任务分解、编排规划 并行执行（均为独立 LLM 调用）
+    const [plan] = await Promise.all([
+      orchestrate(userInput, res),
+      understandIntent(userInput, res),
+      decomposeTask(userInput, res)
+    ]);
 
-    for (let i = 0; i < maxIterations; i++) {
-      const llmResponse = await callLLMNonStream(currentMessages);
-      const toolCalls = parseToolCalls(llmResponse);
+    // 共享上下文，在各 Agent 间传递对话历史
+    const context = {
+      messages: [...messages],
+      res
+    };
 
-      if (toolCalls.length === 0) {
-        await callLLMStream(currentMessages, res);
-        res.end();
-        return;
-      }
+    await runPlan(plan, context);
 
-      const toolResults = await executeToolCalls(toolCalls, res);
-      const toolResultText = formatToolResults(toolResults);
-
-      currentMessages.push({ role: 'assistant', content: llmResponse });
-      currentMessages.push({
-        role: 'user',
-        content: `工具执行结果：${toolResultText}\n\n请继续处理或给出最终回复。`
-      });
-    }
-
-    res.write('\n\n（达到最大工具调用次数，强制结束）');
     res.end();
-
   } catch (error) {
     console.error('Error:', error);
     if (!res.headersSent) {

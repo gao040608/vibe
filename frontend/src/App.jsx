@@ -10,6 +10,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false)
   const [intentInfo, setIntentInfo] = useState(null)
   const [taskInfo, setTaskInfo] = useState(null)
+  const [planInfo, setPlanInfo] = useState(null)
+  const [lintInfo, setLintInfo] = useState(null)
   const abortControllerRef = useRef(null)
 
   const sendMessage = useCallback(async (userInput) => {
@@ -18,6 +20,8 @@ export default function App() {
     setToolLogs([])
     setIntentInfo(null)
     setTaskInfo(null)
+    setPlanInfo(null)
+    setLintInfo(null)
     setIsLoading(true)
 
     // 创建 AbortController，用于取消请求
@@ -61,7 +65,21 @@ export default function App() {
 
           console.log('[chunk]', chunk)
 
-          if (chunk.type === 'intent') {
+          if (chunk.type === 'plan') {
+            if (chunk.status === 'thinking') {
+              setPlanInfo({ loading: true, plan: null })
+            } else if (chunk.status === 'done') {
+              setPlanInfo({ loading: false, plan: chunk.plan })
+            }
+          } else if (chunk.type === 'lint') {
+            if (chunk.status === 'running') {
+              setLintInfo({ loading: true, errorCount: 0, warningCount: 0, results: [] })
+            } else if (chunk.status === 'done') {
+              setLintInfo({ loading: false, errorCount: chunk.errorCount, warningCount: chunk.warningCount, results: chunk.results || [] })
+            } else if (chunk.status === 'error') {
+              setLintInfo({ loading: false, error: chunk.message })
+            }
+          } else if (chunk.type === 'intent') {
             if (chunk.status === 'thinking') {
               setIntentInfo({ loading: true, text: '' })
             } else if (chunk.status === 'done') {
@@ -121,7 +139,7 @@ export default function App() {
         <p className="text-xs text-gray-500">AI 代码生成助手</p>
       </header>
 
-      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} intentInfo={intentInfo} taskInfo={taskInfo} />
+      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} intentInfo={intentInfo} taskInfo={taskInfo} planInfo={planInfo} lintInfo={lintInfo} />
 
       <ChatInput
         onSend={sendMessage}
