@@ -1,5 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const { callLLMNonStream, callLLMStream } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
+
+const CODEGEN_SYSTEM = fs.readFileSync(
+  path.join(__dirname, '..', 'prompts', 'codeGen.txt'),
+  'utf-8'
+);
 
 const MAX_ITERATIONS = 50;
 
