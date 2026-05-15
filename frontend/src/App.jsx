@@ -6,22 +6,14 @@ const API_URL = 'http://localhost:3000/api/chat'
 
 export default function App() {
   const [messages, setMessages] = useState([])
-  const [toolLogs, setToolLogs] = useState([])
+  const [panels, setPanels] = useState({})
   const [isLoading, setIsLoading] = useState(false)
-  const [intentInfo, setIntentInfo] = useState(null)
-  const [taskInfo, setTaskInfo] = useState(null)
-  const [planInfo, setPlanInfo] = useState(null)
-  const [lintInfo, setLintInfo] = useState(null)
   const abortControllerRef = useRef(null)
 
   const sendMessage = useCallback(async (userInput) => {
     const newMessages = [...messages, { role: 'user', content: userInput }]
     setMessages(newMessages)
-    setToolLogs([])
-    setIntentInfo(null)
-    setTaskInfo(null)
-    setPlanInfo(null)
-    setLintInfo(null)
+    setPanels({})
     setIsLoading(true)
 
     // 创建 AbortController，用于取消请求
@@ -44,7 +36,6 @@ export default function App() {
       const decoder = new TextDecoder()
       let assistantContent = ''
       let buffer = ''
-      const logs = []
 
       setMessages([...newMessages, { role: 'assistant', content: '' }])
 
@@ -65,44 +56,34 @@ export default function App() {
 
           console.log('[chunk]', chunk)
 
-          if (chunk.type === 'plan') {
-            if (chunk.status === 'thinking') {
-              setPlanInfo({ loading: true, plan: null })
-            } else if (chunk.status === 'done') {
-              setPlanInfo({ loading: false, plan: chunk.plan })
-            }
-          } else if (chunk.type === 'lint') {
-            if (chunk.status === 'running') {
-              setLintInfo({ loading: true, errorCount: 0, warningCount: 0, results: [] })
-            } else if (chunk.status === 'done') {
-              setLintInfo({ loading: false, errorCount: chunk.errorCount, warningCount: chunk.warningCount, results: chunk.results || [] })
-            } else if (chunk.status === 'error') {
-              setLintInfo({ loading: false, error: chunk.message })
-            }
-          } else if (chunk.type === 'intent') {
-            if (chunk.status === 'thinking') {
-              setIntentInfo({ loading: true, text: '' })
-            } else if (chunk.status === 'done') {
-              setIntentInfo({ loading: false, text: chunk.text })
-            }
+          if (chunk.type === 'intent') {
+            if (chunk.status === 'thinking') setPanels(p => ({ ...p, intent: { loading: true, text: '' } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, intent: { loading: false, text: chunk.text } }))
+          } else if (chunk.type === 'plan') {
+            if (chunk.status === 'thinking') setPanels(p => ({ ...p, plan: { loading: true, plan: null } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, plan: { loading: false, plan: chunk.plan } }))
           } else if (chunk.type === 'task') {
-            if (chunk.status === 'thinking') {
-              setTaskInfo({ loading: true, steps: [] })
-            } else if (chunk.status === 'done') {
-              setTaskInfo({ loading: false, steps: chunk.steps || [] })
-            }
+            if (chunk.status === 'thinking') setPanels(p => ({ ...p, task: { loading: true, steps: [] } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, task: { loading: false, steps: chunk.steps || [] } }))
+          } else if (chunk.type === 'lint') {
+            if (chunk.status === 'running') setPanels(p => ({ ...p, lint: { loading: true, errorCount: 0, warningCount: 0, results: [] } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, lint: { loading: false, errorCount: chunk.errorCount, warningCount: chunk.warningCount, results: chunk.results || [] } }))
+            else if (chunk.status === 'error') setPanels(p => ({ ...p, lint: { loading: false, error: chunk.message } }))
           } else if (chunk.type === 'tool') {
-            const updated = [...logs]
-            if (chunk.status === 'start') {
-              updated.push({ status: 'start', action: chunk.action, path: chunk.path })
-            } else if (chunk.status === 'done') {
-              // 更新对应的 start 条目为 done
-              const idx = updated.findLastIndex(l => l.status === 'start' && l.action === chunk.action && l.path === chunk.path)
-              if (idx !== -1) updated[idx] = { status: 'done', action: chunk.action, path: chunk.path, ok: chunk.ok }
-              else updated.push({ status: 'done', action: chunk.action, path: chunk.path, ok: chunk.ok })
-            }
-            logs.length = 0; logs.push(...updated)
-            setToolLogs([...logs])
+            setPanels(p => {
+              const logs = [...(p.tool?.logs || [])]
+              if (chunk.status === 'start') {
+                logs.push({ status: 'start', action: chunk.action, path: chunk.path })
+              } else if (chunk.status === 'done') {
+                const idx = logs.findLastIndex(l => l.status === 'start' && l.action === chunk.action && l.path === chunk.path)
+                if (idx !== -1) logs[idx] = { status: 'done', action: chunk.action, path: chunk.path, ok: chunk.ok }
+                else logs.push({ status: 'done', action: chunk.action, path: chunk.path, ok: chunk.ok })
+              }
+              return { ...p, tool: { logs } }
+            })
+          } else if (chunk.type === 'doc') {
+            if (chunk.status === 'running') setPanels(p => ({ ...p, doc: { loading: true, files: [] } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, doc: { loading: false, files: chunk.files || [] } }))
           } else if (chunk.type === 'content') {
             assistantContent += chunk.text
             setMessages([...newMessages, { role: 'assistant', content: assistantContent }])
@@ -139,7 +120,7 @@ export default function App() {
         <p className="text-xs text-gray-500">AI 代码生成助手</p>
       </header>
 
-      <ChatHistory messages={messages} toolLogs={toolLogs} isLoading={isLoading} intentInfo={intentInfo} taskInfo={taskInfo} planInfo={planInfo} lintInfo={lintInfo} />
+      <ChatHistory messages={messages} panels={panels} isLoading={isLoading} />
 
       <ChatInput
         onSend={sendMessage}

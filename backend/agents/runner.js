@@ -2,6 +2,7 @@ const { codeGenAgent } = require('./codeGenAgent');
 const { lintAgent } = require('./lintAgent');
 const { chatAgent } = require('./chatAgent');
 const { taskAgent } = require('./taskAgent');
+const { docGenAgent } = require('./docGenAgent');
 
 /**
  * Agent ID → 实现函数映射
@@ -9,12 +10,14 @@ const { taskAgent } = require('./taskAgent');
  * 2: 代码检查 Agent
  * 3: 闲聊对话 Agent
  * 4: 任务分解 Agent
+ * 5: 文档生成 Agent
  */
 const AGENT_MAP = {
   1: codeGenAgent,
   2: lintAgent,
   3: chatAgent,
-  4: taskAgent
+  4: taskAgent,
+  5: docGenAgent
 };
 
 /**
