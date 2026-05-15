@@ -28,27 +28,9 @@ const CARD_CONFIG = [
     isLoading: d => d.loading && !d.plan,
     renderBody: (d, t) => (
       <div className={`${t.body} space-y-0.5`}>
-        {d.plan?.map((phase, i) => (
+        {d.steps?.map((step, i) => (
           <div key={i} className="flex items-center gap-1.5">
-            <span className={t.accent}>阶段{i + 1}:</span>
-            <span>{phase.map(id => `Agent${id}`).join(' + ')}</span>
-          </div>
-        ))}
-      </div>
-    ),
-  },
-  {
-    key: 'task',
-    title: '任务分解',
-    icon: '☰',
-    theme: () => ({ bg: 'bg-blue-50', border: 'border-blue-100', text: 'text-blue-600', accent: 'text-blue-400', pulse: 'bg-blue-400', body: 'text-blue-700' }),
-    loadingText: '正在分解任务...',
-    isLoading: d => d.loading && d.steps.length === 0,
-    renderBody: (d, t) => (
-      <div className={`${t.body} space-y-0.5`}>
-        {d.steps.map((step, i) => (
-          <div key={i} className="flex items-start gap-1.5">
-            <span className={`${t.accent} mt-0.5`}>{i + 1}.</span>
+            <span className={t.accent}>{i + 1}.</span>
             <span>{step}</span>
           </div>
         ))}

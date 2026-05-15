@@ -40,30 +40,33 @@ async function orchestrate(userInput, res) {
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() || '[[1]]';
+    const raw = data.choices?.[0]?.message?.content?.trim() || '{"plan":[[3]],"steps":["回复用户"]}';
 
-    let plan;
+    let result;
     try {
-      plan = JSON.parse(raw);
-      // 校验格式：必须是二维数组，每个元素是数字数组
+      result = JSON.parse(raw);
+      // 校验格式：必须有 plan 和 steps，plan 是二维数组，steps 是字符串数组且长度匹配
       if (
-        !Array.isArray(plan) ||
-        plan.length === 0 ||
-        !plan.every(phase => Array.isArray(phase) && phase.every(id => typeof id === 'number'))
+        !result.plan || !Array.isArray(result.plan) ||
+        !result.steps || !Array.isArray(result.steps) ||
+        result.plan.length !== result.steps.length ||
+        !result.plan.every(phase => Array.isArray(phase) && phase.every(id => typeof id === 'number')) ||
+        !result.steps.every(step => typeof step === 'string')
       ) {
-        plan = [[3]];
+        result = { plan: [[3]], steps: ['回复用户'] };
       }
     } catch {
-      plan = [[3]];
+      result = { plan: [[3]], steps: ['回复用户'] };
     }
 
-    console.log('[ORCHESTRATOR] 执行计划:', JSON.stringify(plan));
-    writeChunk(res, { type: 'plan', status: 'done', plan });
-    return plan;
+    console.log('[ORCHESTRATOR] 执行计划:', JSON.stringify(result.plan));
+    console.log('[ORCHESTRATOR] 步骤描述:', JSON.stringify(result.steps));
+    writeChunk(res, { type: 'plan', status: 'done', plan: result.plan, steps: result.steps });
+    return result.plan;
   } catch (e) {
     console.error('[ORCHESTRATOR] 规划失败:', e.message);
     // 降级：默认只执行闲聊对话
-    writeChunk(res, { type: 'plan', status: 'done', plan: [[3]] });
+    writeChunk(res, { type: 'plan', status: 'done', plan: [[3]], steps: ['回复用户'] });
     return [[3]];
   }
 }

@@ -60,11 +60,8 @@ export default function App() {
             if (chunk.status === 'thinking') setPanels(p => ({ ...p, intent: { loading: true, text: '' } }))
             else if (chunk.status === 'done') setPanels(p => ({ ...p, intent: { loading: false, text: chunk.text } }))
           } else if (chunk.type === 'plan') {
-            if (chunk.status === 'thinking') setPanels(p => ({ ...p, plan: { loading: true, plan: null } }))
-            else if (chunk.status === 'done') setPanels(p => ({ ...p, plan: { loading: false, plan: chunk.plan } }))
-          } else if (chunk.type === 'task') {
-            if (chunk.status === 'thinking') setPanels(p => ({ ...p, task: { loading: true, steps: [] } }))
-            else if (chunk.status === 'done') setPanels(p => ({ ...p, task: { loading: false, steps: chunk.steps || [] } }))
+            if (chunk.status === 'thinking') setPanels(p => ({ ...p, plan: { loading: true, plan: null, steps: [] } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, plan: { loading: false, plan: chunk.plan, steps: chunk.steps || [] } }))
           } else if (chunk.type === 'lint') {
             if (chunk.status === 'running') setPanels(p => ({ ...p, lint: { loading: true, errorCount: 0, warningCount: 0, results: [] } }))
             else if (chunk.status === 'done') setPanels(p => ({ ...p, lint: { loading: false, errorCount: chunk.errorCount, warningCount: chunk.warningCount, results: chunk.results || [] } }))
