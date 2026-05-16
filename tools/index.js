@@ -1,3 +1,5 @@
+const fs = require('fs');
+const path = require('path');
 const readFile = require('./read_file');
 const createFile = require('./create_file');
 const editFile = require('./edit_file');
@@ -58,13 +60,12 @@ async function executeTool(name, args) {
 
 /**
  * 从文本内容中解析工具调用
- * 格式：```tool_call\n{...}\n```
- * 支持多个 tool_call 块
+ * 兼容两种格式：
+ *   ```tool_call\n{...}\n```   （标准格式，换行分隔）
+ *   ```tool_call{...}```       （紧凑格式，LLM 有时输出）
  */
 function parseToolCalls(content) {
   const toolCalls = [];
-
-  // 正确写法：不用正则，直接查找 ```tool_call 和 ``` 边界
   const marker = '```tool_call';
   let pos = 0;
 
@@ -72,15 +73,14 @@ function parseToolCalls(content) {
     const startMarker = content.indexOf(marker, pos);
     if (startMarker === -1) break;
 
-    // 找到下一个换行，后面就是 JSON
-    const jsonStart = content.indexOf('\n', startMarker) + 1;
-    if (jsonStart === 0) break; // 没找到换行
+    const afterMarker = startMarker + marker.length;
 
-    // 找到结束的 ```
-    const endMarker = content.indexOf('\n```', jsonStart);
+    // 找结束的 ```
+    const endMarker = content.indexOf('```', afterMarker);
     if (endMarker === -1) break;
 
-    const jsonStr = content.substring(jsonStart, endMarker).trim();
+    // 提取 marker 和结束符之间的内容，去掉可能的换行
+    const jsonStr = content.substring(afterMarker, endMarker).trim();
 
     try {
       const parsed = JSON.parse(jsonStr);
@@ -94,54 +94,21 @@ function parseToolCalls(content) {
       // 忽略无法解析的块
     }
 
-    pos = endMarker + 4; // 跳过 ```
+    pos = endMarker + 3; // 跳过结束的 ```
   }
 
   return toolCalls;
 }
 
 /**
- * 生成工具使用说明（添加到系统提示词）
- * @returns {string} 工具使用说明
+ * 生成工具使用说明（从 prompts/tools.txt 读取）
+ * @returns {string}
  */
 function generateToolInstructions() {
-  const instructions = [
-    '# 可用工具',
-    '你可以使用以下工具来操作项目文件：\n',
-    '1. **read_file** - 读取文件内容',
-    '   - 参数：file_path (必需), offset (可选), limit (可选)',
-    '   - 示例：{"name": "read_file", "arguments": {"file_path": "src/App.jsx"}}\n',
-    '2. **create_file** - 创建新文件',
-    '   - 参数：file_path (必需), content (必需)',
-    '   - 示例：{"name": "create_file", "arguments": {"file_path": "src/utils/helper.js", "content": "export const add = (a, b) => a + b;"}}',
-    '3. **edit_file** - 编辑现有文件',
-    '   - 参数：file_path (必需), old_string (必需), new_string (必需), replace_all (可选)',
-    '   - 示例：{"name": "edit_file", "arguments": {"file_path": "src/App.jsx", "old_string": "Hello", "new_string": "Hi"}}',
-    '4. **delete_file** - 删除文件或空目录',
-    '   - 参数：file_path (必需), recursive (可选)',
-    '   - 示例：{"name": "delete_file", "arguments": {"file_path": "src/old-file.js"}}',
-    '5. **list_directory** - 列出目录内容',
-    '   - 参数：dir_path (可选), recursive (可选)',
-    '   - 示例：{"name": "list_directory", "arguments": {"dir_path": "src"}}',
-    '\n# 工具调用格式',
-    '当你需要调用工具时，只输出 tool_call 块，不要在块前后添加任何解释、说明或自然语言：',
-    '',
-    '```tool_call',
-    '{"name": "tool_name", "arguments": {"param1": "value1"}}',
-    '```',
-    '',
-    '可以一次调用多个工具（并列多个 ```tool_call 块）。',
-    '',
-    '# 重要提示',
-    '- **调用工具时禁止输出任何自然语言**，只输出 tool_call 块',
-    '- 所有文件路径都是相对于项目根目录的',
-    '- 每次操作前先用 list_directory 了解项目结构',
-    '- 编辑文件前先用 read_file 读取内容',
-    '- 不要猜测文件内容，先读取再编辑',
-    '- 路径穿越被禁止，只能操作项目目录下的文件'
-  ];
-
-  return instructions.join('\n');
+  return fs.readFileSync(
+    path.join(__dirname, '..', 'backend', 'prompts', 'tools.txt'),
+    'utf-8'
+  );
 }
 
 module.exports = {
