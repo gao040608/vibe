@@ -30,6 +30,7 @@ Thumbs.db
 
 # VibeCoding project specific
 project/
+memory/
 
 # Backend
 backend/node_modules/

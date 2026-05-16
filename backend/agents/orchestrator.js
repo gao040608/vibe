@@ -40,7 +40,7 @@ async function orchestrate(userInput, res) {
     }
 
     const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() || '{"plan":[[3]],"steps":["回复用户"]}';
+    const raw = data.choices?.[0]?.message?.content?.trim() || '{"plan":[[1]],"steps":["规划失败"]}';
 
     let result;
     try {
@@ -53,10 +53,10 @@ async function orchestrate(userInput, res) {
         !result.plan.every(phase => Array.isArray(phase) && phase.every(id => typeof id === 'number')) ||
         !result.steps.every(step => typeof step === 'string')
       ) {
-        result = { plan: [[3]], steps: ['回复用户'] };
+        result = { plan: [[1]], steps: ['规划失败'] };
       }
     } catch {
-      result = { plan: [[3]], steps: ['回复用户'] };
+      result = { plan: [[1]], steps: ['规划失败'] };
     }
 
     console.log('[ORCHESTRATOR] 执行计划:', JSON.stringify(result.plan));
@@ -66,7 +66,7 @@ async function orchestrate(userInput, res) {
   } catch (e) {
     console.error('[ORCHESTRATOR] 规划失败:', e.message);
     // 降级：默认只执行闲聊对话
-    writeChunk(res, { type: 'plan', status: 'done', plan: [[3]], steps: ['回复用户'] });
+    writeChunk(res, { type: 'plan', status: 'done', plan: [[1]], steps: ['规划失败'] });
     return [[3]];
   }
 }

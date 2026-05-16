@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { BASE_SYSTEM_PROMPT } = require('../config');
+const { getSystemPromptWithMemory } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 const { generateToolInstructions } = require('../../tools');
@@ -10,10 +10,12 @@ const CODEGEN_SYSTEM = fs.readFileSync(
   'utf-8'
 );
 
-const SYSTEM_MESSAGE = {
-  role: 'system',
-  content: `${BASE_SYSTEM_PROMPT}\n\n${CODEGEN_SYSTEM}\n\n# 可用工具\n${generateToolInstructions()}`
-};
+function buildSystemMessage() {
+  return {
+    role: 'system',
+    content: `${getSystemPromptWithMemory()}\n\n${CODEGEN_SYSTEM}\n\n# 可用工具\n${generateToolInstructions()}`
+  };
+}
 
 const MAX_ITERATIONS = 50;
 
@@ -25,6 +27,7 @@ const MAX_ITERATIONS = 50;
 async function codeGenAgent(context) {
   const { res } = context;
   let currentMessages = [...context.messages];
+  const SYSTEM_MESSAGE = buildSystemMessage();
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const llmResponse = await callLLMNonStream(currentMessages, { systemMessage: SYSTEM_MESSAGE });

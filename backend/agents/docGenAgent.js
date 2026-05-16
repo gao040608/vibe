@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { BASE_SYSTEM_PROMPT } = require('../config');
+const { getSystemPromptWithMemory } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 const { generateToolInstructions } = require('../../tools');
@@ -11,10 +11,12 @@ const DOCGEN_SYSTEM = fs.readFileSync(
   'utf-8'
 );
 
-const SYSTEM_MESSAGE = {
-  role: 'system',
-  content: `${BASE_SYSTEM_PROMPT}\n\n${DOCGEN_SYSTEM}\n\n# 可用工具\n${generateToolInstructions()}`
-};
+function buildSystemMessage() {
+  return {
+    role: 'system',
+    content: `${getSystemPromptWithMemory()}\n\n${DOCGEN_SYSTEM}\n\n# 可用工具\n${generateToolInstructions()}`
+  };
+}
 
 const MAX_ITERATIONS = 50;
 
@@ -34,6 +36,7 @@ async function docGenAgent(context) {
   const { res } = context;
   let currentMessages = [...context.messages];
   const createdFiles = [];
+  const SYSTEM_MESSAGE = buildSystemMessage();
 
   writeChunk(res, { type: 'doc', status: 'running' });
 

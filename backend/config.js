@@ -31,6 +31,39 @@ const BASE_SYSTEM_PROMPT = fs.readFileSync(
   'utf-8'
 );
 
+const MEMORY_DIR = path.join(__dirname, 'memory');
+
+/**
+ * 每次请求时动态读取记忆文件，拼接到系统提示末尾
+ * 不缓存，保证每次都是最新内容
+ */
+function getSystemPromptWithMemory() {
+  const parts = [BASE_SYSTEM_PROMPT];
+
+  const memoryPath = path.join(MEMORY_DIR, 'MEMORY.md');
+  const userPath = path.join(MEMORY_DIR, 'USER.md');
+
+  try {
+    const memory = fs.existsSync(memoryPath)
+      ? fs.readFileSync(memoryPath, 'utf-8').trim()
+      : '';
+    if (memory) {
+      parts.push(`# 项目记忆\n${memory}`);
+    }
+  } catch {}
+
+  try {
+    const user = fs.existsSync(userPath)
+      ? fs.readFileSync(userPath, 'utf-8').trim()
+      : '';
+    if (user) {
+      parts.push(`# 用户画像\n${user}`);
+    }
+  } catch {}
+
+  return parts.join('\n\n');
+}
+
 module.exports = {
   ALIYUN_API_BASE,
   ALIYUN_API_KEY,
@@ -38,5 +71,7 @@ module.exports = {
   DEFAULT_MODEL,
   getModel,
   PORT,
-  BASE_SYSTEM_PROMPT
+  BASE_SYSTEM_PROMPT,
+  getSystemPromptWithMemory
 };
+

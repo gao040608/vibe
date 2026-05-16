@@ -2,6 +2,7 @@ const { Router } = require('express');
 const { understandIntent } = require('../llm/intent');
 const { orchestrate } = require('../agents/orchestrator');
 const { runPlan } = require('../agents/runner');
+const { memoryAgent } = require('../agents/memoryAgent');
 
 const router = Router();
 
@@ -42,7 +43,9 @@ router.post('/chat', async (req, res) => {
 
     await runPlan(plan, context);
 
+    // 响应结束后异步更新记忆，不阻塞本次请求
     res.end();
+    memoryAgent(context.messages).catch(e => console.error('[MEMORY] 异步更新失败:', e.message));
   } catch (error) {
     console.error('Error:', error);
     if (!res.headersSent) {
