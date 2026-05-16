@@ -17,7 +17,12 @@ const CARD_CONFIG = [
     theme: () => ({ bg: 'bg-purple-50', border: 'border-purple-100', text: 'text-purple-600', accent: 'text-purple-400', pulse: 'bg-purple-400', body: 'text-purple-700' }),
     loadingText: '正在理解意图...',
     isLoading: d => d.loading && !d.text,
-    renderBody: (d, t) => <div className={`${t.body} font-medium`}>意图：{d.text}</div>,
+    renderBody: (d, t) => (
+      <div className="flex items-center gap-2">
+        <span className={`${t.body} font-medium`}>{d.text}</span>
+        {d.intentType && <span className={`text-xs ${t.accent} opacity-60`}>{d.intentType}</span>}
+      </div>
+    ),
   },
   {
     key: 'plan',

@@ -57,8 +57,8 @@ export default function App() {
           console.log('[chunk]', chunk)
 
           if (chunk.type === 'intent') {
-            if (chunk.status === 'thinking') setPanels(p => ({ ...p, intent: { loading: true, text: '' } }))
-            else if (chunk.status === 'done') setPanels(p => ({ ...p, intent: { loading: false, text: chunk.text } }))
+            if (chunk.status === 'thinking') setPanels(p => ({ ...p, intent: { loading: true, text: '', intentType: '' } }))
+            else if (chunk.status === 'done') setPanels(p => ({ ...p, intent: { loading: false, text: chunk.text, intentType: chunk.intentType } }))
           } else if (chunk.type === 'plan') {
             if (chunk.status === 'thinking') setPanels(p => ({ ...p, plan: { loading: true, plan: null, steps: [] } }))
             else if (chunk.status === 'done') setPanels(p => ({ ...p, plan: { loading: false, plan: chunk.plan, steps: chunk.steps || [] } }))
