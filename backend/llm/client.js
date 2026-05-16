@@ -97,4 +97,15 @@ async function callLLMStream(messages, res, { model, systemMessage } = {}) {
   });
 }
 
-module.exports = { callLLMNonStream, callLLMStream };
+/**
+ * 将已有文本逐 chunk 写给前端，模拟流式输出
+ * 用于复用非流式调用的结果，避免重复请求 LLM
+ */
+function streamText(text, res) {
+  const CHUNK_SIZE = 10;
+  for (let i = 0; i < text.length; i += CHUNK_SIZE) {
+    writeChunk(res, { type: 'content', text: text.slice(i, i + CHUNK_SIZE) });
+  }
+}
+
+module.exports = { callLLMNonStream, callLLMStream, streamText };

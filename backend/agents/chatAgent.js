@@ -1,4 +1,5 @@
 const { callLLMStream } = require('../llm/client');
+const { getModel } = require('../config');
 
 /**
  * 闲聊 Agent
@@ -8,9 +9,9 @@ const { callLLMStream } = require('../llm/client');
  */
 async function chatAgent(context) {
   const { res } = context;
-  
-  // 直接流式输出对话回复
-  await callLLMStream(context.messages, res);
+
+  // 直接流式输出对话回复，使用快速模型
+  await callLLMStream(context.messages, res, { model: getModel('qwen-flash') });
 }
 
 module.exports = { chatAgent };

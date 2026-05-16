@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { BASE_SYSTEM_PROMPT } = require('../config');
-const { callLLMNonStream, callLLMStream } = require('../llm/client');
+const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 const { generateToolInstructions } = require('../../tools');
 const { writeChunk } = require('../utils/stream');
@@ -43,7 +43,7 @@ async function docGenAgent(context) {
 
     if (toolCalls.length === 0) {
       writeChunk(res, { type: 'doc', status: 'done', files: createdFiles });
-      await callLLMStream(currentMessages, res, { systemMessage: SYSTEM_MESSAGE });
+      streamText(llmResponse, res);
       context.messages = currentMessages;
       return;
     }

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { BASE_SYSTEM_PROMPT } = require('../config');
-const { callLLMNonStream, callLLMStream } = require('../llm/client');
+const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 const { generateToolInstructions } = require('../../tools');
 
@@ -31,8 +31,7 @@ async function codeGenAgent(context) {
     const toolCalls = parseToolCalls(llmResponse);
 
     if (toolCalls.length === 0) {
-      await callLLMStream(currentMessages, res, { systemMessage: SYSTEM_MESSAGE });
-      // 将最终状态同步回共享 context，供后续 Agent 使用
+      streamText(llmResponse, res);
       context.messages = currentMessages;
       return;
     }
