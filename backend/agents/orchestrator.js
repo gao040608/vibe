@@ -3,6 +3,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
 const { writeChunk } = require('../utils/stream');
+const { generateSkillsIndex } = require('../../tools/skills');
 
 const ORCHESTRATOR_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'orchestrator.txt'),
@@ -13,12 +14,18 @@ const ORCHESTRATOR_SYSTEM = fs.readFileSync(
  * 父 Agent：规划执行计划
  * @param {string} userInput
  * @param {Object} res - Express response 对象
- * @returns {Promise<Array>} 二维数组执行计划
+ * @returns {Promise<Array>} 一维数组执行计划
  */
 async function orchestrate(userInput, res) {
   writeChunk(res, { type: 'plan', status: 'thinking' });
 
   try {
+    // 动态注入技能索引到编排器的系统提示
+    const skillsIndex = generateSkillsIndex();
+    const systemPrompt = skillsIndex
+      ? `${ORCHESTRATOR_SYSTEM}\n\n${skillsIndex}`
+      : ORCHESTRATOR_SYSTEM;
+
     const response = await fetch(ALIYUN_API_BASE, {
       method: 'POST',
       headers: {
@@ -28,7 +35,7 @@ async function orchestrate(userInput, res) {
       body: JSON.stringify({
         model: getModel('qwen3.6-plus'),
         messages: [
-          { role: 'system', content: ORCHESTRATOR_SYSTEM },
+          { role: 'system', content: systemPrompt },
           { role: 'user', content: userInput }
         ],
         stream: false

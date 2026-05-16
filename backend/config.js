@@ -35,7 +35,7 @@ const MEMORY_DIR = path.join(__dirname, 'memory');
 
 /**
  * 每次请求时动态读取记忆文件，拼接到系统提示末尾
- * 不缓存，保证每次都是最新内容
+ * 技能索引由 skillsAgent 自己管理，不在此注入
  */
 function getSystemPromptWithMemory() {
   const parts = [BASE_SYSTEM_PROMPT];
