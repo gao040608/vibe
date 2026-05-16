@@ -35,3 +35,4 @@ memory/
 # Backend
 backend/node_modules/
 backend/.env
+backend/skills
