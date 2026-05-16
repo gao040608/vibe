@@ -28,6 +28,20 @@ function extractCreatedFiles(toolResults) {
     .filter(Boolean);
 }
 
+// 过滤掉非 .md 文件的 create_file 调用，防止 LLM 越权生成代码
+function filterToolCalls(toolCalls) {
+  return toolCalls.filter(call => {
+    if (call.name === 'create_file') {
+      const filePath = call.arguments?.file_path || '';
+      if (!filePath.endsWith('.md')) {
+        console.warn(`[DOCGEN] 拦截非文档文件创建：${filePath}`);
+        return false;
+      }
+    }
+    return true;
+  });
+}
+
 /**
  * 文档生成 Agent
  * @param {Object} context - { messages: Array, res: Object }
@@ -42,7 +56,7 @@ async function docGenAgent(context) {
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const llmResponse = await callLLMNonStream(currentMessages, { systemMessage: SYSTEM_MESSAGE });
-    const toolCalls = parseToolCalls(llmResponse);
+    const toolCalls = filterToolCalls(parseToolCalls(llmResponse));
 
     if (toolCalls.length === 0) {
       writeChunk(res, { type: 'doc', status: 'done', files: createdFiles });
