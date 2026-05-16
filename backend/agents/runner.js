@@ -18,36 +18,27 @@ const AGENT_MAP = {
 };
 
 /**
- * 按执行计划调度 Agent
- * 外层数组串行执行（等待每个阶段完成后再进入下一阶段）
- * 内层数组并行执行（同一阶段内的 Agent 同时运行）
+ * 按执行计划串行调度 Agent
+ * plan 是一维数组，每个元素是 Agent ID，按顺序依次执行
  *
  * 示例：
- *   [[1]]       → 只运行代码生成
- *   [[1],[2]]   → 先代码生成，完成后再 lint
- *   [[1,1],[2]] → 两个代码生成并行，完成后再 lint
+ *   [1]     → 只运行代码助手
+ *   [1, 2]  → 先代码助手，完成后再 lint
  *
- * @param {Array} plan - 二维数组，如 [[1],[2]]
+ * @param {Array} plan - 一维数组，如 [1, 2]
  * @param {Object} context - { messages: Array, res: Object }
  */
 async function runPlan(plan, context) {
-  for (let phaseIdx = 0; phaseIdx < plan.length; phaseIdx++) {
-    const phase = plan[phaseIdx];
-    console.log(`[RUNNER] 阶段 ${phaseIdx + 1}/${plan.length}，并行执行 Agent: [${phase.join(', ')}]`);
-
-    const agentFns = phase.map(id => {
-      const fn = AGENT_MAP[id];
-      if (!fn) {
-        console.warn(`[RUNNER] 未知 Agent ID: ${id}，跳过`);
-        return () => Promise.resolve();
-      }
-      return fn;
-    });
-
-    // 同一阶段内并行执行
-    await Promise.all(agentFns.map(fn => fn(context)));
-
-    console.log(`[RUNNER] 阶段 ${phaseIdx + 1} 完成`);
+  for (let i = 0; i < plan.length; i++) {
+    const id = plan[i];
+    const fn = AGENT_MAP[id];
+    if (!fn) {
+      console.warn(`[RUNNER] 未知 Agent ID: ${id}，跳过`);
+      continue;
+    }
+    console.log(`[RUNNER] 步骤 ${i + 1}/${plan.length}，执行 Agent ${id}`);
+    await fn(context);
+    console.log(`[RUNNER] 步骤 ${i + 1} 完成`);
   }
 }
 

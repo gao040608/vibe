@@ -45,18 +45,18 @@ async function orchestrate(userInput, res) {
     let result;
     try {
       result = JSON.parse(raw);
-      // 校验格式：必须有 plan 和 steps，plan 是二维数组，steps 是字符串数组且长度匹配
+      // 校验格式：plan 是一维数字数组，steps 是等长字符串数组
       if (
         !result.plan || !Array.isArray(result.plan) ||
         !result.steps || !Array.isArray(result.steps) ||
         result.plan.length !== result.steps.length ||
-        !result.plan.every(phase => Array.isArray(phase) && phase.every(id => typeof id === 'number')) ||
+        !result.plan.every(id => typeof id === 'number') ||
         !result.steps.every(step => typeof step === 'string')
       ) {
-        result = { plan: [[1]], steps: ['规划失败'] };
+        result = { plan: [1], steps: ['处理请求'] };
       }
     } catch {
-      result = { plan: [[1]], steps: ['规划失败'] };
+      result = { plan: [1], steps: ['处理请求'] };
     }
 
     console.log('[ORCHESTRATOR] 执行计划:', JSON.stringify(result.plan));
@@ -65,9 +65,8 @@ async function orchestrate(userInput, res) {
     return result.plan;
   } catch (e) {
     console.error('[ORCHESTRATOR] 规划失败:', e.message);
-    // 降级：默认只执行闲聊对话
-    writeChunk(res, { type: 'plan', status: 'done', plan: [[1]], steps: ['规划失败'] });
-    return [[3]];
+    writeChunk(res, { type: 'plan', status: 'done', plan: [3], steps: ['回复用户'] });
+    return [3];
   }
 }
 
