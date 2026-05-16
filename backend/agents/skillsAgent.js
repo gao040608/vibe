@@ -3,15 +3,11 @@ const path = require('path');
 const { getSystemPromptWithMemory } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
+const { generateToolInstructions } = require('../../tools');
 const { generateSkillsIndex } = require('../../tools/skills');
 
 const SKILLS_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'skills.txt'),
-  'utf-8'
-);
-
-const SKILLS_TOOL_INSTRUCTIONS = fs.readFileSync(
-  path.join(__dirname, '..', 'prompts', 'skills_tools.txt'),
   'utf-8'
 );
 
@@ -23,7 +19,7 @@ function buildSystemMessage() {
       getSystemPromptWithMemory(),
       SKILLS_SYSTEM,
       skillsIndex,
-      SKILLS_TOOL_INSTRUCTIONS
+      `# 可用工具\n${generateToolInstructions()}`
     ].join('\n\n')
   };
 }
