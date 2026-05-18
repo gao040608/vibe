@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const SKILLS_DIR = path.join(__dirname, '..', 'backend', 'skills');
+const SKILLS_DIR = path.join(__dirname, '..', 'skills');
 
 /**
- * 解析技能文件的 frontmatter，提取 name/description/category/tags
+ * 解析技能文件的 frontmatter，提取 name/description
  */
 function parseSkillFrontmatter(filePath) {
   const content = fs.readFileSync(filePath, 'utf-8');
@@ -36,27 +36,15 @@ function generateSkillsIndex() {
   const files = fs.readdirSync(SKILLS_DIR).filter(f => f.endsWith('.md'));
   if (files.length === 0) return '';
 
-  const byCategory = {};
+  const skills = [];
   for (const file of files) {
     const meta = parseSkillFrontmatter(path.join(SKILLS_DIR, file));
     if (!meta?.name || !meta?.description) continue;
-    const cat = meta.category || 'uncategorized';
-    if (!byCategory[cat]) byCategory[cat] = [];
-    byCategory[cat].push({ name: meta.name, description: meta.description });
+    skills.push({ name: meta.name, description: meta.description });
   }
-
-  const CATEGORY_LABELS = {
-    'web-templates': '网页模板',
-    'web-apps': '网页应用',
-    'uncategorized': '其他'
-  };
 
   const lines = ['# 可用技能模板', '', '以下是预设的常见场景模板，技能文件存储在 backend/skills/ 目录：', ''];
-  for (const [cat, items] of Object.entries(byCategory)) {
-    lines.push(`## ${CATEGORY_LABELS[cat] || cat}`);
-    items.forEach(s => lines.push(`- **${s.name}**: ${s.description}`));
-    lines.push('');
-  }
+  skills.forEach(s => lines.push(`- **${s.name}**: ${s.description}`));
 
   return lines.join('\n');
 }

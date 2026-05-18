@@ -3,7 +3,7 @@ const path = require('path');
 const fetch = require('node-fetch');
 const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
 const { writeChunk } = require('../utils/stream');
-const { generateSkillsIndex } = require('../../tools/skills');
+const { generateSkillsIndex } = require('../utils/skills');
 
 const ORCHESTRATOR_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'orchestrator.txt'),

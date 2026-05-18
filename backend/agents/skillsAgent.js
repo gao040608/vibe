@@ -4,7 +4,7 @@ const { getSystemPromptWithMemory } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 const { generateToolInstructions } = require('../../tools');
-const { generateSkillsIndex } = require('../../tools/skills');
+const { generateSkillsIndex } = require('../utils/skills');
 
 const SKILLS_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'skills.txt'),
