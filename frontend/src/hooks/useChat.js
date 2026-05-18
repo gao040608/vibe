@@ -56,10 +56,12 @@ export default function useChat() {
             continue
           }
 
-          const patch = parseChunk(chunk, {})
-          if (patch) {
-            setPanels(prev => ({ ...prev, ...patch }))
-          }
+          // 使用函数式更新，确保拿到最新的 panels 状态
+          setPanels(prev => {
+            const patch = parseChunk(chunk, prev)
+            if (!patch) return prev
+            return { ...prev, ...patch }
+          })
         }
       }
     } catch (error) {
