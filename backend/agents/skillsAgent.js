@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { getSystemPromptWithMemory } = require('../config');
+const { getSystemPromptWithMemory, getModel } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
 const { generateToolInstructions } = require('../../tools');
@@ -37,7 +37,7 @@ async function skillsAgent(context) {
   const SYSTEM_MESSAGE = buildSystemMessage();
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const llmResponse = await callLLMNonStream(currentMessages, { systemMessage: SYSTEM_MESSAGE });
+    const llmResponse = await callLLMNonStream(currentMessages, { model: getModel('qwen3.6-plus'), systemMessage: SYSTEM_MESSAGE });
     const toolCalls = parseToolCalls(llmResponse);
 
     if (toolCalls.length === 0) {
