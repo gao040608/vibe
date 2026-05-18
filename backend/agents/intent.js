@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getModel } = require('../config');
-const { callLLMNonStream } = require('./client');
+const { callLLMNonStream } = require('../llm/client');
 const { writeChunk } = require('../utils/stream');
 
 const INTENT_SYSTEM = fs.readFileSync(

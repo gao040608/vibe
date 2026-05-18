@@ -3,7 +3,7 @@ const path = require('path');
 const { getSystemPromptWithMemory, getModel } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
-const { generateToolInstructions } = require('../../tools');
+const { generateToolInstructions } = require('../tools');
 
 const CODEGEN_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'codeGen.txt'),

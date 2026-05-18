@@ -1,4 +1,4 @@
-const { executeTool, parseToolCalls } = require('../../tools');
+const { executeTool, parseToolCalls } = require('../tools');
 const { writeChunk } = require('../utils/stream');
 
 const ACTION_MAP = {

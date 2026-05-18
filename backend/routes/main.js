@@ -1,5 +1,5 @@
 const { Router } = require('express');
-const { understandIntent } = require('../llm/intent');
+const { understandIntent } = require('../agents/intent');
 const { orchestrate } = require('../agents/orchestrator');
 const { runPlan } = require('../agents/runner');
 const { memoryAgent } = require('../agents/memoryAgent');

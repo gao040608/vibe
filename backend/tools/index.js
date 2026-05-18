@@ -106,7 +106,7 @@ function parseToolCalls(content) {
  */
 function generateToolInstructions() {
   return fs.readFileSync(
-    path.join(__dirname, '..', 'backend', 'prompts', 'tools.txt'),
+    path.join(__dirname, '..', 'prompts', 'tools.txt'),
     'utf-8'
   );
 }

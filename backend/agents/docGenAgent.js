@@ -3,7 +3,7 @@ const path = require('path');
 const { getSystemPromptWithMemory, getModel } = require('../config');
 const { callLLMNonStream, streamText } = require('../llm/client');
 const { executeToolCalls, formatToolResults, parseToolCalls } = require('../services/toolRunner');
-const { generateToolInstructions } = require('../../tools');
+const { generateToolInstructions } = require('../tools');
 const { writeChunk } = require('../utils/stream');
 
 const DOCGEN_SYSTEM = fs.readFileSync(

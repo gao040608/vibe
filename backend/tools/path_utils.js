@@ -2,7 +2,7 @@ const path = require('path');
 const fs = require('fs');
 
 // 项目根目录（用户代码只允许在此目录下操作）
-const PROJECT_ROOT = path.resolve('C:/Users/Administrator/Desktop/vibe/project');
+const PROJECT_ROOT = path.resolve('C:/Users/Administrator/Desktop/vibe/workspace');
 
 // 技能模板目录（只读，供 skillsAgent 读取模板）
 const SKILLS_ROOT = path.resolve('C:/Users/Administrator/Desktop/vibe/backend/skills');

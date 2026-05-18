@@ -44,10 +44,10 @@ async function orchestrate(userInput, res) {
         !result.plan.every(id => typeof id === 'number') ||
         !result.steps.every(step => typeof step === 'string')
       ) {
-        result = { plan: [1], steps: ['处理请求'] };
+        result = { plan: [1], steps: ['规划失败'] };
       }
     } catch {
-      result = { plan: [1], steps: ['处理请求'] };
+      result = { plan: [1], steps: ['规划失败'] };
     }
 
     console.log('[ORCHESTRATOR] 执行计划:', JSON.stringify(result.plan));
@@ -56,8 +56,8 @@ async function orchestrate(userInput, res) {
     return result.plan;
   } catch (e) {
     console.error('[ORCHESTRATOR] 规划失败:', e.message);
-    writeChunk(res, { type: 'plan', status: 'done', plan: [3], steps: ['回复用户'] });
-    return [3];
+    writeChunk(res, { type: 'plan', status: 'done', plan: [1], steps: ['规划失败'] });
+    return [1];
   }
 }
 
