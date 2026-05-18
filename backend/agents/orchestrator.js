@@ -35,7 +35,24 @@ async function orchestrate(userInput, res) {
 
     let result;
     try {
-      result = JSON.parse(trimmed);
+      // 从 LLM 返回文本中提取 JSON（兼容代码块包裹、前后加自然语言等情况）
+      let jsonStr = trimmed;
+
+      // 1. 尝试去掉 markdown 代码块包裹 ```json ... ```
+      const codeBlockMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?```/);
+      if (codeBlockMatch) {
+        jsonStr = codeBlockMatch[1].trim();
+      }
+
+      // 2. 如果不是以 { 开头，从文本中提取第一个 JSON 对象
+      if (!jsonStr.startsWith('{')) {
+        const extractMatch = trimmed.match(/\{[\s\S]*\}/);
+        if (extractMatch) {
+          jsonStr = extractMatch[0];
+        }
+      }
+
+      result = JSON.parse(jsonStr);
       // 校验格式：plan 是一维数字数组，steps 是等长字符串数组
       if (
         !result.plan || !Array.isArray(result.plan) ||
@@ -44,9 +61,11 @@ async function orchestrate(userInput, res) {
         !result.plan.every(id => typeof id === 'number') ||
         !result.steps.every(step => typeof step === 'string')
       ) {
+        console.warn('[ORCHESTRATOR] 校验失败，LLM 原始返回:', trimmed);
         result = { plan: [1], steps: ['规划失败'] };
       }
-    } catch {
+    } catch (e) {
+      console.warn('[ORCHESTRATOR] JSON 解析失败，LLM 原始返回:', trimmed, '错误:', e.message);
       result = { plan: [1], steps: ['规划失败'] };
     }
 
