@@ -29,7 +29,7 @@ Thumbs.db
 *.swo
 
 # VibeCoding project specific
-project/
+workspace/
 memory/
 
 # Backend

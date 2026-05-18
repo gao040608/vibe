@@ -2,8 +2,6 @@
 
 一个简单的前后端分离AI聊天应用，使用阿里云通义千问API。
 cd "C:\Users\Administrator\Desktop\vibe"
-## 项目结构
-
 
 ## 快速开始
 
