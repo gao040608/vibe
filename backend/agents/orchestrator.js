@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
-const fetch = require('node-fetch');
-const { ALIYUN_API_BASE, ALIYUN_API_KEY, getModel } = require('../config');
+const { getModel } = require('../config');
+const { callLLMNonStream } = require('../llm/client');
 const { writeChunk } = require('../utils/stream');
 const { generateSkillsIndex } = require('../utils/skills');
 
@@ -26,32 +26,16 @@ async function orchestrate(userInput, res) {
       ? `${ORCHESTRATOR_SYSTEM}\n\n${skillsIndex}`
       : ORCHESTRATOR_SYSTEM;
 
-    const response = await fetch(ALIYUN_API_BASE, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${ALIYUN_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: getModel('qwen3.6-plus'),
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userInput }
-        ],
-        stream: false
-      })
-    });
+    const raw = await callLLMNonStream(
+      [{ role: 'user', content: userInput }],
+      { model: getModel('qwen3.6-plus'), systemMessage: { role: 'system', content: systemPrompt } }
+    );
 
-    if (!response.ok) {
-      throw new Error(`Orchestrator API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const raw = data.choices?.[0]?.message?.content?.trim() || '{"plan":[[1]],"steps":["规划失败"]}';
+    const trimmed = raw.trim() || '{"plan":[1],"steps":["规划失败"]}';
 
     let result;
     try {
-      result = JSON.parse(raw);
+      result = JSON.parse(trimmed);
       // 校验格式：plan 是一维数字数组，steps 是等长字符串数组
       if (
         !result.plan || !Array.isArray(result.plan) ||
