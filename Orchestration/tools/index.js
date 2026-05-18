@@ -16,7 +16,7 @@ const tools = [
 ];
 
 /**
- * 获取所有工具的定义（用于发送给 LLM）
+ * 获取所有工具的定义（用于 Function Calling 的 tools 参数）
  * @returns {Array} 工具定义列表
  */
 function getToolDefinitions() {
@@ -58,63 +58,8 @@ async function executeTool(name, args) {
   }
 }
 
-/**
- * 从文本内容中解析工具调用
- * 兼容两种格式：
- *   ```tool_call\n{...}\n```   （标准格式，换行分隔）
- *   ```tool_call{...}```       （紧凑格式，LLM 有时输出）
- */
-function parseToolCalls(content) {
-  const toolCalls = [];
-  const marker = '```tool_call';
-  let pos = 0;
-
-  while (true) {
-    const startMarker = content.indexOf(marker, pos);
-    if (startMarker === -1) break;
-
-    const afterMarker = startMarker + marker.length;
-
-    // 找结束的 ```
-    const endMarker = content.indexOf('```', afterMarker);
-    if (endMarker === -1) break;
-
-    // 提取 marker 和结束符之间的内容，去掉可能的换行
-    const jsonStr = content.substring(afterMarker, endMarker).trim();
-
-    try {
-      const parsed = JSON.parse(jsonStr);
-      if (parsed.name && parsed.arguments) {
-        toolCalls.push({
-          name: parsed.name,
-          arguments: parsed.arguments
-        });
-      }
-    } catch (e) {
-      // 忽略无法解析的块
-    }
-
-    pos = endMarker + 3; // 跳过结束的 ```
-  }
-
-  return toolCalls;
-}
-
-/**
- * 生成工具使用说明（从 prompts/tools.txt 读取）
- * @returns {string}
- */
-function generateToolInstructions() {
-  return fs.readFileSync(
-    path.join(__dirname, '..', 'prompts', 'tools.txt'),
-    'utf-8'
-  );
-}
-
 module.exports = {
   getToolDefinitions,
   findToolByName,
-  executeTool,
-  parseToolCalls,
-  generateToolInstructions
+  executeTool
 };

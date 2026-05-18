@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { callLLMNonStream } = require('../llm/client');
+const { callLLMWithTools } = require('../llm/client');
 const { getModel } = require('../config');
 
 const MEMORY_DIR = path.join(__dirname, '..', 'memory');
@@ -10,6 +10,35 @@ const MEMORY_SYSTEM = fs.readFileSync(
   path.join(__dirname, '..', 'prompts', 'memory.txt'),
   'utf-8'
 );
+
+// Structured Output Schema
+const MEMORY_SCHEMA = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'memory_update',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        action: {
+          type: 'string',
+          enum: ['update', 'skip'],
+          description: 'update 表示更新 MEMORY.md，skip 表示跳过'
+        },
+        content: {
+          type: 'string',
+          description: '更新后的完整 MEMORY.md 内容（Markdown 格式），action=skip 时为空字符串'
+        },
+        reason: {
+          type: 'string',
+          description: 'action=skip 时的原因说明，action=update 时为空字符串'
+        }
+      },
+      required: ['action', 'content', 'reason'],
+      additionalProperties: false
+    }
+  }
+};
 
 function readMemoryFile() {
   return fs.existsSync(MEMORY_PATH)
@@ -23,7 +52,7 @@ function writeMemoryFile(content) {
 }
 
 /**
- * 项目记忆更新 Agent — 按需更新 MEMORY.md
+ * 项目记忆更新 Agent — 使用 Structured Output
  * @param {Array} messages - 完整对话历史
  */
 async function memoryAgent(messages) {
@@ -38,21 +67,19 @@ async function memoryAgent(messages) {
       `\n---\n\n本次对话记录：\n${conversationText}`
     ].join('\n');
 
-    const raw = await callLLMNonStream(
+    const message = await callLLMWithTools(
       [
         { role: 'system', content: MEMORY_SYSTEM },
         { role: 'user', content: prompt }
       ],
-      { model: getModel('qwen-flash') }
+      {
+        model: getModel('qwen-flash'),
+        responseFormat: MEMORY_SCHEMA
+      }
     );
 
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.warn('[MEMORY] 未找到有效 JSON，跳过更新');
-      return;
-    }
-
-    const result = JSON.parse(jsonMatch[0]);
+    const content = typeof message.content === 'string' ? message.content : JSON.stringify(message.content);
+    const result = JSON.parse(content);
 
     if (result.action === 'skip') {
       console.log(`[MEMORY] 跳过更新：${result.reason}`);

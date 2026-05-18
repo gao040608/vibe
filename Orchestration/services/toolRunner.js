@@ -1,4 +1,4 @@
-const { executeTool, parseToolCalls } = require('../tools');
+const { executeTool } = require('../tools');
 const { writeChunk } = require('../utils/stream');
 
 const ACTION_MAP = {
@@ -10,24 +10,42 @@ const ACTION_MAP = {
 };
 
 /**
- * 执行工具调用，并向前端发送 SSE chunk 显示操作进度
- * @param {Array} toolCalls
+ * 执行 Function Calling 返回的工具调用
+ * @param {Array} toolCalls - OpenAI 格式的 tool_calls 数组
+ *   [{ id, type:'function', function: { name, arguments: string } }]
  * @param {Object} res - Express response 对象
- * @returns {Promise<Array>}
+ * @returns {Promise<Array>} 执行结果数组，每项含 toolCallId/name/result
  */
 async function executeToolCalls(toolCalls, res) {
   const results = [];
 
   for (const call of toolCalls) {
-    const action = ACTION_MAP[call.name] || '操作';
-    const filePath = call.arguments.file_path || '';
+    const toolName = call.function.name;
+    const action = ACTION_MAP[toolName] || '操作';
+    let toolArgs;
+
+    try {
+      toolArgs = typeof call.function.arguments === 'string'
+        ? JSON.parse(call.function.arguments)
+        : call.function.arguments;
+    } catch (e) {
+      console.warn(`[TOOL] 参数解析失败: ${call.function.arguments}`);
+      toolArgs = {};
+    }
+
+    const filePath = toolArgs.file_path || toolArgs.dir_path || '';
     const toolMsg = `${action}：${filePath}`;
 
     writeChunk(res, { type: 'tool', status: 'start', action, path: filePath });
     console.log(`[TOOL] ${toolMsg}`);
 
-    const result = await executeTool(call.name, call.arguments);
-    results.push({ name: call.name, arguments: call.arguments, result });
+    const result = await executeTool(toolName, toolArgs);
+    results.push({
+      toolCallId: call.id,
+      name: toolName,
+      arguments: toolArgs,
+      result
+    });
 
     writeChunk(res, { type: 'tool', status: 'done', action, path: filePath, ok: result.success });
   }
@@ -36,12 +54,12 @@ async function executeToolCalls(toolCalls, res) {
 }
 
 /**
- * 格式化工具执行结果为文本，追加到对话上下文
+ * 格式化工具执行结果为文本，用于追加到上下文
  * @param {Array} results
  * @returns {string}
  */
 function formatToolResults(results) {
-  const lines = ['\n\n# 工具执行结果\n'];
+  const lines = [];
 
   for (const { name, arguments: args, result } of results) {
     lines.push(`## ${name}`);
@@ -53,4 +71,4 @@ function formatToolResults(results) {
   return lines.join('\n');
 }
 
-module.exports = { executeToolCalls, formatToolResults, parseToolCalls };
+module.exports = { executeToolCalls, formatToolResults };

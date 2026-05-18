@@ -9,8 +9,8 @@ import LintPanel from './panels/LintPanel'
 const PANEL_COMPONENTS = {
   intent: IntentPanel,
   plan: PlanPanel,
-  tool: ToolPanel,
   doc: DocPanel,
+  tool: ToolPanel,
   lint: LintPanel,
 }
 

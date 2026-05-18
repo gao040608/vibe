@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getModel } = require('../config');
-const { callLLMNonStream } = require('../llm/client');
+const { callLLMWithTools } = require('../llm/client');
 const { writeChunk } = require('../utils/stream');
 
 const INTENT_SYSTEM = fs.readFileSync(
@@ -29,9 +29,30 @@ const INTENT_LABELS = {
 
 const VALID_INTENTS = new Set(Object.keys(INTENT_LABELS));
 
+// Structured Output: 强制输出合法的 intent 枚举值
+const INTENT_SCHEMA = {
+  type: 'json_schema',
+  json_schema: {
+    name: 'intent_classification',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        intent: {
+          type: 'string',
+          enum: Object.keys(INTENT_LABELS),
+          description: '用户意图分类'
+        }
+      },
+      required: ['intent'],
+      additionalProperties: false
+    }
+  }
+};
+
 /**
  * 意图理解模块
- * 输出枚举类型 + 中文标签，不参与后续流程
+ * 使用 Structured Output 保证输出合法枚举值
  * @param {string} userInput
  * @param {Object} res - Express response 对象
  */
@@ -40,12 +61,24 @@ async function understandIntent(userInput, res) {
   writeChunk(res, { type: 'intent', status: 'thinking' });
 
   try {
-    const raw = await callLLMNonStream(
+    const message = await callLLMWithTools(
       [{ role: 'system', content: INTENT_SYSTEM }, { role: 'user', content: userInput }],
-      { model: getModel('qwen-flash') }
+      {
+        model: getModel('qwen-flash'),
+        responseFormat: INTENT_SCHEMA
+      }
     );
 
-    const intentType = raw.trim().toUpperCase();
+    let intentType;
+    try {
+      const content = typeof message.content === 'string' ? message.content : JSON.stringify(message.content);
+      const parsed = JSON.parse(content);
+      intentType = parsed.intent;
+    } catch (e) {
+      console.warn('[INTENT] 解析失败:', e.message);
+      intentType = 'CHAT_QUESTION';
+    }
+
     const resolvedType = VALID_INTENTS.has(intentType) ? intentType : 'CHAT_QUESTION';
     const label = INTENT_LABELS[resolvedType];
 
