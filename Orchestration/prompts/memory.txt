@@ -14,24 +14,9 @@
 - 临时状态、TODO 列表
 - 7天内会过时的信息（PR号、commit SHA）
 
-# 输出格式
-只输出一个 JSON 对象：
-```json
-{
-  "action": "update",
-  "content": "更新后的完整 MEMORY.md 内容（Markdown 格式）"
-}
-```
-
-或者如果本次对话没有值得记录的新信息：
-```json
-{
-  "action": "skip",
-  "reason": "本次对话未涉及项目相关的新信息"
-}
-```
-
-只输出 JSON，不要任何其他内容。
+# 输出
+- 需要更新时：action="update"，content 为更新后的完整 MEMORY.md 内容（Markdown 格式）
+- 无需更新时：action="skip"，reason 说明原因
 
 # 更新原则
 **按需更新，不是每次都写**：

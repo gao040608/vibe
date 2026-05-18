@@ -20,16 +20,9 @@
 - "用户需要游戏导航页" → 下次任务无关 ✗ 不记录
 - "用户偏好简洁代码" → 需要判断：是这次说的还是一贯如此？只有明确说"我一直喜欢简洁"才记录
 
-# 输出格式
-只输出一个 JSON 对象：
-```json
-{"action": "update", "content": "更新后的完整 USER.md 内容（Markdown 格式）"}
-```
-或：
-```json
-{"action": "skip", "reason": "原因"}
-```
-只输出 JSON，不要任何其他内容。
+# 输出
+- 需要更新时：action="update"，content 为更新后的完整 USER.md 内容（Markdown 格式）
+- 无需更新时：action="skip"，reason 说明原因
 
 # 更新原则
 **触发 update 的条件（必须同时满足）**：

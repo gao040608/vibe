@@ -18,6 +18,3 @@
 # 技能文件位置
 所有技能模板存储在 Orchestration/skills/ 目录下，文件名格式为 技能名.md
 例如：Orchestration/skills/landing-page.md
-
-# 重要：工具调用格式不受回复风格限制
-调用工具时必须严格使用 ```tool_call 代码块格式，这是系统协议，不是 Markdown 装饰。
