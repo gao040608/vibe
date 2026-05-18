@@ -1,7 +1,7 @@
 {
-  "name": "vibecoding-backend",
+  "name": "vibecoding-orchestration",
   "version": "1.0.0",
-  "description": "VibeCoding backend with tool calling support",
+  "description": "VibeCoding orchestration layer with tool calling support",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

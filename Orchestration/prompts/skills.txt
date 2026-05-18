@@ -7,17 +7,17 @@
 
 # 工作流程
 1. 根据用户需求，从技能索引中找到最匹配的技能名称
-2. 用 read_file 读取 `backend/skills/技能名.md` 文件
+2. 用 read_file 读取 `Orchestration/skills/技能名.md` 文件
 3. 仔细阅读模板内容（跳过 YAML frontmatter），了解需要创建哪些文件
 4. 用 create_file 按模板逐一创建文件到项目根目录
 
 # 工作准则
 - 严格按模板结构创建文件，不随意增减
-- 文件路径相对于项目根目录（不要带 backend/skills/ 前缀）
+- 文件路径相对于项目根目录（不要带 Orchestration/skills/ 前缀）
 
 # 技能文件位置
-所有技能模板存储在 backend/skills/ 目录下，文件名格式为 技能名.md
-例如：backend/skills/landing-page.md
+所有技能模板存储在 Orchestration/skills/ 目录下，文件名格式为 技能名.md
+例如：Orchestration/skills/landing-page.md
 
 # 重要：工具调用格式不受回复风格限制
 调用工具时必须严格使用 ```tool_call 代码块格式，这是系统协议，不是 Markdown 装饰。

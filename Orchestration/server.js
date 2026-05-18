@@ -11,6 +11,6 @@ app.use(express.json());
 app.use('/api', chatRouter);
 
 app.listen(PORT, () => {
-  console.log(`VibeCoding backend running on http://localhost:${PORT}`);
+  console.log(`VibeCoding Orchestration running on http://localhost:${PORT}`);
 });
 

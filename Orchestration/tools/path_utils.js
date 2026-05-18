@@ -5,7 +5,7 @@ const fs = require('fs');
 const PROJECT_ROOT = path.resolve('C:/Users/Administrator/Desktop/vibe/workspace');
 
 // 技能模板目录（只读，供 skillsAgent 读取模板）
-const SKILLS_ROOT = path.resolve('C:/Users/Administrator/Desktop/vibe/backend/skills');
+const SKILLS_ROOT = path.resolve('C:/Users/Administrator/Desktop/vibe/Orchestration/skills');
 
 /**
  * 安全解析路径，防止路径穿越攻击
@@ -18,9 +18,9 @@ function safeResolve(userPath, root = PROJECT_ROOT) {
   // 移除开头的斜杠，确保是相对路径
   const normalized = userPath.replace(/^[\\/]+/, '');
 
-  // 如果路径以 backend/skills/ 开头，允许访问技能目录
-  if (normalized.startsWith('backend/skills/') || normalized.startsWith('backend\\skills\\')) {
-    const skillFile = normalized.replace(/^backend[/\\]skills[/\\]/, '');
+  // 如果路径以 Orchestration/skills/ 开头，允许访问技能目录
+  if (normalized.startsWith('Orchestration/skills/') || normalized.startsWith('Orchestration\\skills\\')) {
+    const skillFile = normalized.replace(/^Orchestration[/\\]skills[/\\]/, '');
     const resolved = path.resolve(SKILLS_ROOT, skillFile);
     if (!resolved.startsWith(SKILLS_ROOT)) {
       throw new Error(`路径穿越禁止: 不能访问技能目录外的文件`);

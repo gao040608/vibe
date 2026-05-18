@@ -5,14 +5,14 @@ cd "C:\Users\Administrator\Desktop\vibe"
 
 ## 快速开始
 
-### 1. 启动后端
+### 1. 启动编排层
 
 ```bash
-cd backend
+cd Orchestration
 npm start
 ```
 
-后端运行在 `http://localhost:8000`
+编排层运行在 `http://localhost:8000`
 
 ### 2. 启动前端
 

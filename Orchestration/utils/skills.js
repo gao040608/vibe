@@ -43,7 +43,7 @@ function generateSkillsIndex() {
     skills.push({ name: meta.name, description: meta.description });
   }
 
-  const lines = ['# 可用技能模板', '', '以下是预设的常见场景模板，技能文件存储在 backend/skills/ 目录：', ''];
+  const lines = ['# 可用技能模板', '', '以下是预设的常见场景模板，技能文件存储在 Orchestration/skills/ 目录：', ''];
   skills.forEach(s => lines.push(`- **${s.name}**: ${s.description}`));
 
   return lines.join('\n');
