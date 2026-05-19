@@ -48,7 +48,25 @@ async function callLLMNonStream(messages, { model, systemMessage } = {}) {
  * @returns {Promise<Object>} 完整的 message 对象 { role, content, tool_calls?, ... }
  */
 async function callLLMWithTools(messages, { model, systemMessage, tools, toolChoice, responseFormat } = {}) {
-  const apiMessages = systemMessage ? [systemMessage, ...messages] : messages;
+  let apiMessages = systemMessage ? [systemMessage, ...messages] : messages;
+
+  // 阿里云百炼要求：使用 response_format 时，messages 中必须包含 "json" 这个词
+  if (responseFormat) {
+    const hasJsonKeyword = apiMessages.some(m =>
+      typeof m.content === 'string' && m.content.toLowerCase().includes('json')
+    );
+    if (!hasJsonKeyword) {
+      // 在最后一条 user 消息末尾追加提示
+      const lastUserIdx = apiMessages.findLastIndex(m => m.role === 'user');
+      if (lastUserIdx !== -1) {
+        apiMessages = [...apiMessages];
+        apiMessages[lastUserIdx] = {
+          ...apiMessages[lastUserIdx],
+          content: apiMessages[lastUserIdx].content + '\n\n请以 JSON 格式输出。'
+        };
+      }
+    }
+  }
 
   const body = {
     model: model || getModel('qwen3.6-plus'),
