@@ -1,10 +1,17 @@
+const fs = require('fs');
+const path = require('path');
 const { callLLMStream } = require('../llm/client');
 const { getModel, getSystemPromptWithMemory } = require('../config');
+
+const CHAT_SYSTEM = fs.readFileSync(
+  path.join(__dirname, '..', 'prompts', 'chat.txt'),
+  'utf-8'
+);
 
 function buildChatSystemMessage() {
   return {
     role: 'system',
-    content: getSystemPromptWithMemory()
+    content: `${getSystemPromptWithMemory()}\n\n${CHAT_SYSTEM}`
   };
 }
 
