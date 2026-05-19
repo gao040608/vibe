@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { callLLMWithTools } = require('../llm/client');
 const { getModel } = require('../config');
+const { extractConversationLog } = require('../utils/conversationLog');
 
 const MEMORY_DIR = path.join(__dirname, '..', 'memory');
 const MEMORY_PATH = path.join(MEMORY_DIR, 'MEMORY.md');
@@ -58,9 +59,7 @@ function writeMemoryFile(content) {
 async function memoryAgent(messages) {
   try {
     const currentMemory = readMemoryFile();
-    const conversationText = messages
-      .map(m => `[${m.role === 'user' ? '用户' : '助手'}]: ${m.content}`)
-      .join('\n');
+    const conversationText = extractConversationLog(messages);
 
     const prompt = [
       currentMemory ? `当前 MEMORY.md 内容：\n${currentMemory}` : '当前 MEMORY.md 内容：（空）',

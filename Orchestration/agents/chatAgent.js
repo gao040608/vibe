@@ -1,5 +1,12 @@
 const { callLLMStream } = require('../llm/client');
-const { getModel } = require('../config');
+const { getModel, getSystemPromptWithMemory } = require('../config');
+
+function buildChatSystemMessage() {
+  return {
+    role: 'system',
+    content: getSystemPromptWithMemory()
+  };
+}
 
 /**
  * 闲聊 Agent
@@ -11,7 +18,10 @@ async function chatAgent(context) {
   const { res } = context;
 
   // 直接流式输出对话回复，使用快速模型
-  await callLLMStream(context.messages, res, { model: getModel('qwen-flash') });
+  await callLLMStream(context.messages, res, {
+    model: getModel('qwen-flash'),
+    systemMessage: buildChatSystemMessage()
+  });
 }
 
 module.exports = { chatAgent };

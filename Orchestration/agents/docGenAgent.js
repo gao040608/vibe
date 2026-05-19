@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { getSystemPromptWithMemory, getModel } = require('../config');
-const { callLLMWithTools, streamText } = require('../llm/client');
+const { callLLMWithTools } = require('../llm/client');
 const { executeToolCalls, formatToolResults } = require('../services/toolRunner');
 const { getToolDefinitions } = require('../tools');
 const { writeChunk } = require('../utils/stream');
@@ -72,11 +72,10 @@ async function docGenAgent(context) {
       toolChoice: 'auto'
     });
 
-    // 没有工具调用 → 最终回复
+    // 没有工具调用 → 将最终回复写入 context，不直接输出给用户
     if (!message.tool_calls || message.tool_calls.length === 0) {
       writeChunk(res, { type: 'doc', status: 'done', files: createdFiles });
-      const finalContent = message.content || '';
-      streamText(finalContent, res);
+      currentMessages.push(message);
       context.messages = currentMessages;
       return;
     }

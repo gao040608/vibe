@@ -1,17 +1,26 @@
+const fs = require('fs');
+const path = require('path');
 const { codeGenAgent } = require('./codeGenAgent');
 const { lintAgent } = require('./lintAgent');
 const { chatAgent } = require('./chatAgent');
 const { docGenAgent } = require('./docGenAgent');
 const { skillsAgent } = require('./skillsAgent');
+const { callLLMStream } = require('../llm/client');
+const { getModel, getSystemPromptWithMemory } = require('../config');
+const { extractConversationLog } = require('../utils/conversationLog');
 
-/**
- * Agent ID → 实现函数映射
- * 1: 代码生成 Agent
- * 2: 代码检查 Agent
- * 3: 闲聊对话 Agent
- * 5: 文档生成 Agent
- * 6: 技能模板 Agent
- */
+const SUMMARY_SYSTEM = fs.readFileSync(
+  path.join(__dirname, '..', 'prompts', 'summary.txt'),
+  'utf-8'
+);
+
+function buildSummarySystemMessage() {
+  return {
+    role: 'system',
+    content: `${getSystemPromptWithMemory()}\n\n${SUMMARY_SYSTEM}`
+  };
+}
+
 const AGENT_MAP = {
   1: codeGenAgent,
   2: lintAgent,
@@ -20,29 +29,40 @@ const AGENT_MAP = {
   6: skillsAgent
 };
 
-/**
- * 按执行计划串行调度 Agent
- * plan 是一维数组，每个元素是 Agent ID，按顺序依次执行
- *
- * 示例：
- *   [1]     → 只运行代码助手
- *   [1, 2]  → 先代码助手，完成后再 lint
- *
- * @param {Array} plan - 一维数组，如 [1, 2]
- * @param {Object} context - { messages: Array, res: Object }
- */
+async function generateSummary(context) {
+  const conversationLog = extractConversationLog(context.messages);
+  const prompt = '以下是本次对话的执行记录：\n\n' + conversationLog;
+
+  await callLLMStream(
+    [{ role: 'user', content: prompt }],
+    context.res,
+    {
+      model: getModel('qwen-flash'),
+      systemMessage: buildSummarySystemMessage()
+    }
+  );
+}
+
 async function runPlan(plan, context) {
   for (let i = 0; i < plan.length; i++) {
     const id = plan[i];
     const fn = AGENT_MAP[id];
     if (!fn) {
-      console.warn(`[RUNNER] 未知 Agent ID: ${id}，跳过`);
+      console.warn('[RUNNER] 未知 Agent ID: ' + id + '，跳过');
       continue;
     }
-    console.log(`[RUNNER] 步骤 ${i + 1}/${plan.length}，执行 Agent ${id}`);
+    console.log('[RUNNER] 步骤 ' + (i + 1) + '/' + plan.length + '，执行 Agent ' + id);
     await fn(context);
-    console.log(`[RUNNER] 步骤 ${i + 1} 完成`);
+    console.log('[RUNNER] 步骤 ' + (i + 1) + ' 完成');
   }
+
+  if (plan.length === 1 && plan[0] === 3) {
+    return;
+  }
+
+  console.log('[RUNNER] 生成总结');
+  await generateSummary(context);
+  console.log('[RUNNER] 总结完成');
 }
 
 module.exports = { runPlan };
