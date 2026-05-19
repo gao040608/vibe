@@ -3,7 +3,7 @@ import ChatHistory from './components/ChatHistory'
 import ChatInput from './components/ChatInput'
 
 export default function App() {
-  const { messages, panels, isLoading, sendMessage, stopGeneration } = useChat()
+  const { messages, turnPanels, isLoading, sendMessage, stopGeneration } = useChat()
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -12,7 +12,7 @@ export default function App() {
         <p className="text-xs text-gray-500">AI 代码生成助手</p>
       </header>
 
-      <ChatHistory messages={messages} panels={panels} isLoading={isLoading} />
+      <ChatHistory messages={messages} turnPanels={turnPanels} isLoading={isLoading} />
 
       <ChatInput
         onSend={sendMessage}

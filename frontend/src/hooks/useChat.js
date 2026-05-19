@@ -5,14 +5,17 @@ const API_URL = 'http://localhost:3000/api/chat'
 
 export default function useChat() {
   const [messages, setMessages] = useState([])
-  const [panels, setPanels] = useState({})
+  // turnPanels: { [turnIndex]: { intent, plan, tool, lint, doc } }
+  // 每轮对话独立保存自己的 panels，发新消息不会清空历史
+  const [turnPanels, setTurnPanels] = useState({})
   const [isLoading, setIsLoading] = useState(false)
   const abortControllerRef = useRef(null)
 
   const sendMessage = useCallback(async (userInput) => {
     const newMessages = [...messages, { role: 'user', content: userInput }]
     setMessages(newMessages)
-    setPanels({})
+    // 当前轮次索引 = 用户消息数 - 1（0-based）
+    const turnIndex = newMessages.filter(m => m.role === 'user').length - 1
     setIsLoading(true)
 
     const controller = new AbortController()
@@ -56,11 +59,15 @@ export default function useChat() {
             continue
           }
 
-          // 使用函数式更新，确保拿到最新的 panels 状态
-          setPanels(prev => {
-            const patch = parseChunk(chunk, prev)
+          // 更新当前轮次的 panels
+          setTurnPanels(prev => {
+            const currentTurnPanels = prev[turnIndex] || {}
+            const patch = parseChunk(chunk, currentTurnPanels)
             if (!patch) return prev
-            return { ...prev, ...patch }
+            return {
+              ...prev,
+              [turnIndex]: { ...currentTurnPanels, ...patch }
+            }
           })
         }
       }
@@ -86,5 +93,5 @@ export default function useChat() {
     }
   }, [])
 
-  return { messages, panels, isLoading, sendMessage, stopGeneration }
+  return { messages, turnPanels, isLoading, sendMessage, stopGeneration }
 }
